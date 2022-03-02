@@ -1,11 +1,12 @@
 ﻿@page "/"
 @inject HttpClient Http
+@using AprsSharp.Parsers.Aprs
 
 <PageTitle>APRS Weather</PageTitle>
 
 <h1>Current Weather</h1>
 
-@if (forecasts == null)
+@if (reports == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -14,42 +15,33 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
+                <th>Callsign</th>
+                <th>Report Time (UTC)</th>
                 <th>Temp. (F)</th>
-                <th>Summary</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var report in reports)
             {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
+                if (report.InfoField is WeatherInfo wi)
+                {
+                    <tr>
+                        <td>@report.Sender</td>
+                        <td>@wi.Timestamp?.DateTime.ToUniversalTime()</td>
+                        <td>@wi.Temperature</td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private Packet[]? reports;
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
-    }
-
-    public class WeatherForecast
-    {
-        public DateTime Date { get; set; }
-
-        public int TemperatureC { get; set; }
-
-        public string? Summary { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        var response = await Http.GetFromJsonAsync<string[]>("http://localhost:5184/api/reports"); // TODO: Make this real
+        reports = response?.Select(p => new Packet(p)).ToArray();
     }
 }
