@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E2DEEA9F-E533-4E67-9390-E3DA9D829AF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AprsWeatherClient", "src\AprsWeatherClient\AprsWeatherClient.csproj", "{7AB46389-0DD1-498C-A89C-96EDF3E61634}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7AB46389-0DD1-498C-A89C-96EDF3E61634}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AB46389-0DD1-498C-A89C-96EDF3E61634}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AB46389-0DD1-498C-A89C-96EDF3E61634}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AB46389-0DD1-498C-A89C-96EDF3E61634}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7AB46389-0DD1-498C-A89C-96EDF3E61634} = {E2DEEA9F-E533-4E67-9390-E3DA9D829AF6}
+	EndGlobalSection
+EndGlobal
