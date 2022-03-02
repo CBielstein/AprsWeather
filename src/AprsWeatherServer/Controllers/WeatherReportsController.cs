@@ -6,16 +6,18 @@ namespace AprsWeatherServer.Controllers;
 [Route("[controller]")]
 public class WeatherReportsController : ControllerBase
 {
-    private readonly ILogger<WeatherReportsController> _logger;
+    private readonly ILogger<WeatherReportsController> logger;
+    private readonly IDictionary<string, string> reports;
 
-    public WeatherReportsController(ILogger<WeatherReportsController> logger)
+    public WeatherReportsController(ILogger<WeatherReportsController> logger, IDictionary<string, string> reports)
     {
-        _logger = logger;
+        this.logger = logger;
+        this.reports = reports;
     }
 
     [HttpGet(Name = "GetWeatherReports")]
     public IEnumerable<string> Get()
     {
-        throw new NotImplementedException();
+        return reports.Values;
     }
 }

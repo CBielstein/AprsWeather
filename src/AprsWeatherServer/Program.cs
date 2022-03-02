@@ -1,6 +1,10 @@
+using AprsWeatherServer.BackgroundServices;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddSingleton<IDictionary<string, string>>(new Dictionary<string, string>());
+builder.Services.AddHostedService<AprsIsReceiver>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
