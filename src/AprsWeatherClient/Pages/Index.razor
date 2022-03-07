@@ -41,7 +41,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await Http.GetFromJsonAsync<string[]>("http://localhost:5184/api/reports"); // TODO: Make this real
+        var response = await Http.GetFromJsonAsync<string[]>($"{Environment.GetEnvironmentVariable("SERVER_ENDPOINT")}/WeatherReports"); // TODO: Make this real
         reports = response?.Select(p => new Packet(p)).ToArray();
     }
 }

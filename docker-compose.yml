@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  client:
+    build: ./src/AprsWeatherClient
+    depends_on:
+      - server
+    ports:
+      - "5148:5148"
+    environment:
+      - SERVER_ENDPOINT=server:5148
+
+  server:
+    build: ./src/AprsWeatherServer
+    ports:
+      - "5149:5148"
+    environment:
+      - APRS_IS_CALLSIGN=${APRS_IS_CALLSIGN}
