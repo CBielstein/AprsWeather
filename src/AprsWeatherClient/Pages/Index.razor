@@ -1,6 +1,7 @@
 ﻿@page "/"
-@inject HttpClient Http
 @using AprsSharp.Parsers.Aprs
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 
 <PageTitle>APRS Weather</PageTitle>
 
@@ -38,10 +39,22 @@ else
 
 @code {
     private Packet[]? reports;
+    private HttpClient client = new HttpClient();
+    private string? apiAddress;
+
+    private async Task UpdateReports()
+    {
+        if (apiAddress == null)
+        {
+            apiAddress = Configuration["ServerAddress"];
+        }
+
+        var response = await client.GetFromJsonAsync<string[]>($"{apiAddress}/WeatherReports");
+        reports = response?.Select(p => new Packet(p)).ToArray();
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await Http.GetFromJsonAsync<string[]>($"{Environment.GetEnvironmentVariable("SERVER_ENDPOINT")}/WeatherReports"); // TODO: Make this real
-        reports = response?.Select(p => new Packet(p)).ToArray();
+        await UpdateReports();
     }
 }
