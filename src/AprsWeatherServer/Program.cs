@@ -1,10 +1,19 @@
 using AprsWeatherServer.BackgroundServices;
 
+var devCorsName = "DevelopmentCorsPolicy";
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IDictionary<string, string>>(new Dictionary<string, string>());
 builder.Services.AddHostedService<AprsIsReceiver>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        name: devCorsName,
+        b => b.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -21,6 +30,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Disable CORS in development
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors(devCorsName);
+}
 
 app.UseAuthorization();
 

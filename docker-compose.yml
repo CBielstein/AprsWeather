@@ -7,8 +7,6 @@ services:
       - server
     ports:
       - "80:80"
-    environment:
-      - SERVER_ENDPOINT=server:5148
 
   server:
     build: ./src/AprsWeatherServer
@@ -16,3 +14,4 @@ services:
       - "5148:80"
     environment:
       - APRS_IS_CALLSIGN=${APRS_IS_CALLSIGN}
+      - ASPNETCORE_ENVIRONMENT=Development
