@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddSingleton<IDictionary<string, string>>(new Dictionary<string, string>());
 builder.Services.AddHostedService<AprsIsReceiver>();
+builder.Services.AddHostedService<ReportExpiry>();
 
 builder.Services.AddCors(options =>
 {
