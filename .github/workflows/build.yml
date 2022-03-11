@@ -1,0 +1,40 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: build
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v2
+
+      - name: DotnetVersion
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+        
+      - name: Test
+        run: dotnet test --configuration Release --no-build --no-restore
+
+      - name: Build client docker image
+        run: docker build src/AprsWeatherClient
+      
+      - name: Build server docker image
+        run: docker build src/AprsWeatherServer
