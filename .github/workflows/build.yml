@@ -37,4 +37,4 @@ jobs:
         run: docker build src/AprsWeatherClient
       
       - name: Build server docker image
-        run: Build docker build src/AprsWeatherServer
+        run: docker build src/AprsWeatherServer
