@@ -1,0 +1,19 @@
+name: AprsWeather
+services:
+  - name: AprsWeatherServer
+    github:
+      repo: CBielstein/AprsWeather
+      branch: main
+      deploy_on_push: false
+    dockerfile_path: src/AprsWeatherServer/Dockerfile
+    routes:
+      - path: /api
+static_sites:
+  - name: AprsWeatherClient
+    github:
+      repo: CBielstein/AprsWeather
+      branch: main
+      deploy_on_push: false
+    dockerfile_path: src/AprsWeatherClient/Dockerfile
+    output_dir: /app/publish
+region: sfo3
