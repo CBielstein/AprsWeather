@@ -17,3 +17,7 @@ static_sites:
     dockerfile_path: src/AprsWeatherClient/Dockerfile
     output_dir: /app/publish
 region: sfo3
+domains:
+  - domain: hamwx.bielstein.dev
+    type: PRIMARY
+    wildcard: false
