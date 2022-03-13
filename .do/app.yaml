@@ -6,6 +6,11 @@ services:
       branch: main
       deploy_on_push: false
     dockerfile_path: src/AprsWeatherServer/Dockerfile
+    envs:
+      - key: APRS_IS_CALLSIGN
+        value: ${APRS_IS_CALLSIGN}
+        type: GENERAL
+        scope: RUN_TIME
     routes:
       - path: /api
 static_sites:
