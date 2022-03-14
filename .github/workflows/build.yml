@@ -55,6 +55,7 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: build
 
+    steps:
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
           with:
