@@ -41,8 +41,8 @@ jobs:
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
-          with:
-            token: ${{ secrets.DO_ACCESS_TOKEN }}
+        with:
+          token: ${{ secrets.DO_ACCESS_TOKEN }}
 
       - name: Set environment variables in app spec
         run: sed -i "s/${APRS_IS_CALLSIGN}/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
@@ -60,8 +60,8 @@ jobs:
     steps:
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
-          with:
-            token: ${{ secrets.DO_ACCESS_TOKEN }}
+        with:
+          token: ${{ secrets.DO_ACCESS_TOKEN }}
 
       - name: Set environment variables in app spec
         run: sed -i "s/${APRS_IS_CALLSIGN}/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
