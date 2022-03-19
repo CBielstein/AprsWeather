@@ -8,7 +8,7 @@ services:
     dockerfile_path: src/AprsWeatherServer/Dockerfile
     envs:
       - key: APRS_IS_CALLSIGN
-        value: ${APRS_IS_CALLSIGN}
+        value: %APRS_IS_CALLSIGN%
         type: GENERAL
         scope: RUN_TIME
     routes:

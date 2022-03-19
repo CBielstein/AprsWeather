@@ -45,7 +45,7 @@ jobs:
           token: ${{ secrets.DO_ACCESS_TOKEN }}
 
       - name: Set environment variables in app spec
-        run: sed -i "s/${APRS_IS_CALLSIGN}/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
+        run: sed -i "s/%APRS_IS_CALLSIGN%/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
 
       - name: Validate app spec
         run: doctl apps spec validate .do/app.yaml
@@ -64,7 +64,7 @@ jobs:
           token: ${{ secrets.DO_ACCESS_TOKEN }}
 
       - name: Set environment variables in app spec
-        run: sed -i "s/${APRS_IS_CALLSIGN}/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
+        run: sed -i "s/%APRS_IS_CALLSIGN%/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
 
       - name: Validate app spec
         run: doctl apps spec validate .do/app.yaml
