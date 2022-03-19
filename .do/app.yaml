@@ -1,6 +1,6 @@
-name: AprsWeather
+name: aprs-weather
 services:
-  - name: AprsWeatherServer
+  - name: aprs-weather-server
     github:
       repo: CBielstein/AprsWeather
       branch: main
@@ -14,7 +14,7 @@ services:
     routes:
       - path: /api
 static_sites:
-  - name: AprsWeatherClient
+  - name: aprs-weather-client
     github:
       repo: CBielstein/AprsWeather
       branch: main
