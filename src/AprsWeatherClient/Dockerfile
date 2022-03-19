@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine3.14-amd64 AS build
+ARG ENVIRONMENT=Production
 WORKDIR /src
 
 # Restore
@@ -7,6 +8,9 @@ RUN dotnet restore
 
 # Build
 COPY . .
+RUN echo $ENVIRONMENT
+RUN sed -i "s/%ENVIRONMENT%/$ENVIRONMENT/g" wwwroot/index.html
+RUN cat wwwroot/index.html
 RUN dotnet build --configuration Release --no-restore
 
 # Publish
