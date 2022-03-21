@@ -38,3 +38,42 @@ jobs:
       
       - name: Build server docker image
         run: docker build src/AprsWeatherServer
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_ACCESS_TOKEN }}
+
+      - name: Set environment variables in app spec
+        run: sed -i "s/%APRS_IS_CALLSIGN%/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
+
+      - name: Validate app spec
+        run: doctl apps spec validate .do/app.yaml
+
+  deploy:
+    name: deploy
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: build
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v2
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_ACCESS_TOKEN }}
+
+      - name: Set environment variables in app spec
+        run: sed -i "s/%APRS_IS_CALLSIGN%/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
+
+      - name: Validate app spec
+        run: doctl apps spec validate .do/app.yaml
+
+      - name: Update Infrastructure
+        run: doctl apps create --spec .do/app.yaml --upsert true --wait true
+
+      - name: Deploy Code
+        run: doctl apps create-deployment ${{ secrets.DO_APP_ID }} --wait true
