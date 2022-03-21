@@ -1,0 +1,31 @@
+name: aprs-weather
+services:
+  - name: aprs-weather-server
+    github:
+      repo: CBielstein/AprsWeather
+      branch: main
+      deploy_on_push: false
+    dockerfile_path: src/AprsWeatherServer/Dockerfile
+    source_dir: src/AprsWeatherServer
+    envs:
+      - key: APRS_IS_CALLSIGN
+        value: %APRS_IS_CALLSIGN%
+        type: GENERAL
+        scope: RUN_TIME
+    http_port: 80
+    routes:
+      - path: /api
+static_sites:
+  - name: aprs-weather-client
+    github:
+      repo: CBielstein/AprsWeather
+      branch: main
+      deploy_on_push: false
+    dockerfile_path: src/AprsWeatherClient/Dockerfile
+    source_dir: src/AprsWeatherClient
+    output_dir: /usr/share/nginx/html
+region: sfo3
+domains:
+  - domain: hamwx.bielstein.dev
+    type: PRIMARY
+    wildcard: false

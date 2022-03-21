@@ -2,7 +2,10 @@ version: "3"
 
 services:
   client:
-    build: ./src/AprsWeatherClient
+    build:
+      context: ./src/AprsWeatherClient
+      args:
+        ENVIRONMENT: Development
     depends_on:
       - server
     ports:
