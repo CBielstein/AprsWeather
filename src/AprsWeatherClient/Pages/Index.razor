@@ -17,6 +17,7 @@ else
         <thead>
             <tr>
                 <th>Callsign</th>
+                <th>Location</th>
                 <th>Report Time (UTC)</th>
                 <th>Temp. (F)</th>
             </tr>
@@ -28,6 +29,7 @@ else
                 {
                     <tr>
                         <td>@report.Sender</td>
+                        <td>@wi.Position.EncodeGridsquare(6, false)</td>
                         <td>@wi.Timestamp?.DateTime.ToUniversalTime()</td>
                         <td>@wi.Temperature</td>
                     </tr>
