@@ -40,7 +40,7 @@ else
 }
 
 @code {
-    private Packet[]? reports;
+    private IEnumerable<Packet>? reports;
     private HttpClient client = new HttpClient();
     private string? apiAddress;
 
@@ -52,7 +52,12 @@ else
         }
 
         var response = await client.GetFromJsonAsync<string[]>($"{apiAddress}/WeatherReports");
-        reports = response?.Select(p => new Packet(p)).ToArray();
+
+        // Decode
+        var decodedReports = response?.Select(p => new Packet(p));
+
+        // Order by Gridsquare
+        reports = decodedReports?.OrderBy(r => (r.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
     }
 
     protected override async Task OnInitializedAsync()
