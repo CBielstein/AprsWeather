@@ -24,6 +24,9 @@ static_sites:
     dockerfile_path: src/AprsWeatherClient/Dockerfile
     source_dir: src/AprsWeatherClient
     output_dir: /usr/share/nginx/html
+    routes:
+      - path: /about
+        preserve_path_prefix: true
 region: sfo3
 domains:
   - domain: hamwx.bielstein.dev
