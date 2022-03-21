@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using AprsSharp.Parsers.Aprs
 @using Microsoft.Extensions.Configuration
+@using AprsWeatherClient.Extensions
 @inject IConfiguration Configuration
 
 <PageTitle>APRS Weather</PageTitle>
@@ -18,7 +19,7 @@ else
             <tr>
                 <th>Callsign</th>
                 <th>Location</th>
-                <th>Report Time (UTC)</th>
+                <th>Time</th>
                 <th>Temp. (F)</th>
             </tr>
         </thead>
@@ -30,7 +31,7 @@ else
                     <tr>
                         <td>@report.Sender</td>
                         <td>@wi.Position.EncodeGridsquare(6, false)</td>
-                        <td>@wi.Timestamp?.DateTime.ToUniversalTime()</td>
+                        <td>@wi.Timestamp?.DateTime.MinutesSince() minutes ago</td>
                         <td>@wi.Temperature</td>
                     </tr>
                 }
