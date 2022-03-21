@@ -18,6 +18,7 @@ else
         <thead>
             <tr>
                 <th>Callsign</th>
+                <th>Location</th>
                 <th>Time</th>
                 <th>Temp. (F)</th>
             </tr>
@@ -29,6 +30,7 @@ else
                 {
                     <tr>
                         <td>@report.Sender</td>
+                        <td>@wi.Position.EncodeGridsquare(6, false)</td>
                         <td>@wi.Timestamp?.DateTime.MinutesSince() minutes ago</td>
                         <td>@wi.Temperature</td>
                     </tr>
@@ -39,7 +41,7 @@ else
 }
 
 @code {
-    private Packet[]? reports;
+    private IEnumerable<Packet>? reports;
     private HttpClient client = new HttpClient();
     private string? apiAddress;
 
@@ -51,7 +53,12 @@ else
         }
 
         var response = await client.GetFromJsonAsync<string[]>($"{apiAddress}/WeatherReports");
-        reports = response?.Select(p => new Packet(p)).ToArray();
+
+        // Decode
+        var decodedReports = response?.Select(p => new Packet(p));
+
+        // Order by Gridsquare
+        reports = decodedReports?.OrderBy(r => (r.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
     }
 
     protected override async Task OnInitializedAsync()
