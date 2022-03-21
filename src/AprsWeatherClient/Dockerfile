@@ -8,7 +8,6 @@ RUN dotnet restore
 
 # Build
 COPY . .
-RUN echo $ENVIRONMENT
 RUN sed -i "s/%ENVIRONMENT%/$ENVIRONMENT/g" wwwroot/index.html
 RUN cat wwwroot/index.html
 RUN dotnet build --configuration Release --no-restore
