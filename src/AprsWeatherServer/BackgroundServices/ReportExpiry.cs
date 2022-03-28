@@ -1,4 +1,5 @@
 using AprsSharp.Parsers.Aprs;
+using AprsWeather.Shared;
 
 namespace AprsWeatherServer.BackgroundServices;
 
@@ -7,21 +8,24 @@ namespace AprsWeatherServer.BackgroundServices;
 /// </summary>
 public class ReportExpiry: IHostedService
 {
-    private readonly IDictionary<string, string> reports;
+    private readonly IDictionary<string, WeatherReport<string>> reports;
     private readonly ILogger<ReportExpiry> logger;
     private Task? workerTask;
     private readonly CancellationTokenSource workerTokenSource = new CancellationTokenSource();
-    private readonly int reportExpiryMinutes;
+    private readonly TimeSpan reportExpiry;
     private readonly int taskFrequencyMs;
 
     public ReportExpiry(
-        IDictionary<string, string> reports,
+        IDictionary<string, WeatherReport<string>> reports,
         IConfiguration configuration,
         ILogger<ReportExpiry> logger)
     {
         this.reports = reports;
         this.logger = logger;
-        reportExpiryMinutes = int.Parse(configuration["ReportExpiryMinutes"]);
+
+        var reportExpiryMinutes = int.Parse(configuration["ReportExpiryMinutes"]);
+        reportExpiry = TimeSpan.FromMinutes(reportExpiryMinutes);
+
         taskFrequencyMs = int.Parse(configuration["ExpiryCheckFrequencyMinutes"]) * 60 * 1000;
     }
 
@@ -43,12 +47,11 @@ public class ReportExpiry: IHostedService
         while (!stoppingToken.IsCancellationRequested)
         {
             IEnumerable<string> expiredKeys = reports
-                .Where(r => 
+                .Where(r =>
                 {
-                    var p = new Packet(r.Value);
-                    var packetTime = (p.InfoField as WeatherInfo)?.Timestamp?.DateTime.ToUniversalTime();
-                    var currentTimeAlive = packetTime?.Subtract(DateTime.UtcNow).Duration();
-                    return currentTimeAlive > TimeSpan.FromMinutes(reportExpiryMinutes);
+                    var received = r.Value.ReceivedTime;
+                    var currentTimeAlive = received.Subtract(DateTimeOffset.UtcNow).Duration();
+                    return currentTimeAlive > reportExpiry;
                 })
                 .Select(r => r.Key);
 

@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using AprsSharp.Parsers.Aprs
+@using AprsWeather.Shared
 @using Microsoft.Extensions.Configuration
 @using AprsWeatherClient.Extensions
 @inject IConfiguration Configuration
@@ -26,12 +27,12 @@ else
         <tbody>
             @foreach (var report in reports)
             {
-                if (report.InfoField is WeatherInfo wi)
+                if (report.Report.InfoField is WeatherInfo wi)
                 {
                     <tr>
-                        <td>@report.Sender</td>
+                        <td>@report.Report.Sender</td>
                         <td>@wi.Position.EncodeGridsquare(6, false)</td>
-                        <td>@wi.Timestamp?.DateTime.MinutesSince() minutes ago</td>
+                        <td>@report.ReceivedTime.MinutesSince() minutes ago</td>
                         <td>@wi.Temperature</td>
                     </tr>
                 }
@@ -41,7 +42,7 @@ else
 }
 
 @code {
-    private IEnumerable<Packet>? reports;
+    private IEnumerable<WeatherReport<Packet>>? reports;
     private HttpClient client = new HttpClient();
     private string? apiAddress;
 
@@ -52,13 +53,18 @@ else
             apiAddress = Configuration["ServerAddress"];
         }
 
-        var response = await client.GetFromJsonAsync<string[]>($"{apiAddress}/WeatherReports");
+        var response = await client.GetFromJsonAsync<WeatherReport<string>[]>($"{apiAddress}/WeatherReports");
 
         // Decode
-        var decodedReports = response?.Select(p => new Packet(p));
+        var decodedReports = response?.Select(r =>
+            new WeatherReport<Packet>()
+            {
+                Report = new Packet(r.Report),
+                ReceivedTime = r.ReceivedTime,
+            });
 
         // Order by Gridsquare
-        reports = decodedReports?.OrderBy(r => (r.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
+        reports = decodedReports?.OrderBy(r => (r.Report.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
     }
 
     protected override async Task OnInitializedAsync()

@@ -3,18 +3,23 @@ ARG ENVIRONMENT=Production
 WORKDIR /src
 
 # Restore
-COPY AprsWeatherClient.csproj .
-RUN dotnet restore
+COPY AprsWeatherClient/AprsWeatherClient.csproj AprsWeatherClient/
+COPY AprsWeatherShared/AprsWeatherShared.csproj AprsWeatherShared/
+RUN dotnet restore AprsWeatherClient/AprsWeatherClient.csproj
+
+# Build
+COPY AprsWeatherClient/ AprsWeatherClient/
+COPY AprsWeatherShared/ AprsWeatherShared/
 
 # Build
 COPY . .
-RUN sed -i "s/%ENVIRONMENT%/$ENVIRONMENT/g" wwwroot/index.html
-RUN dotnet build --configuration Release --no-restore
+RUN sed -i "s/%ENVIRONMENT%/$ENVIRONMENT/g" AprsWeatherClient/wwwroot/index.html
+RUN dotnet build AprsWeatherClient/AprsWeatherClient.csproj --configuration Release --no-restore
 
 # Publish
-RUN dotnet publish --configuration Release --no-build --no-restore -o /app/publish
+RUN dotnet publish AprsWeatherClient/AprsWeatherClient.csproj --configuration Release --no-build --no-restore -o /app/publish
 
 # Build final host image
 FROM nginx:1.21.6-alpine AS host
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
-COPY --from=build /src/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /src/AprsWeatherClient/nginx.conf /etc/nginx/nginx.conf

@@ -3,7 +3,8 @@ version: "3"
 services:
   client:
     build:
-      context: ./src/AprsWeatherClient
+      dockerfile: ./AprsWeatherClient/Dockerfile
+      context: ./src
       args:
         ENVIRONMENT: Development
     depends_on:
@@ -12,7 +13,9 @@ services:
       - "80:80"
 
   server:
-    build: ./src/AprsWeatherServer
+    build:
+      dockerfile: ./AprsWeatherServer/Dockerfile
+      context: ./src
     ports:
       - "5148:80"
     environment:

@@ -1,15 +1,16 @@
 using AprsSharp.Connections.AprsIs;
 using AprsSharp.Parsers.Aprs;
+using AprsWeather.Shared;
 
 namespace AprsWeatherServer.BackgroundServices;
 
 public class AprsIsReceiver: IHostedService
 {
-    private readonly IDictionary<string, string> reports;
+    private readonly IDictionary<string, WeatherReport<string>> reports;
     private Task? receiveTask;
     private readonly AprsIsConnection client = new AprsIsConnection(new TcpConnection());
 
-    public AprsIsReceiver(IDictionary<string, string> reports)
+    public AprsIsReceiver(IDictionary<string, WeatherReport<string>> reports)
     {
         this.reports = reports;
     }
@@ -22,7 +23,11 @@ public class AprsIsReceiver: IHostedService
         {
             if (p.InfoField is WeatherInfo)
             {
-                reports[p.Sender] = p.Encode();
+                reports[p.Sender] = new WeatherReport<string>()
+                {
+                    ReceivedTime = DateTimeOffset.UtcNow,
+                    Report = p.Encode(),
+                };
             }
         };
 
