@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AprsWeatherClient", "src\Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AprsWeatherServer", "src\AprsWeatherServer\AprsWeatherServer.csproj", "{760ABBC2-D490-4B26-ADBA-D171543E6537}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AprsWeatherShared", "src\AprsWeatherShared\AprsWeatherShared.csproj", "{A4C1EE3F-8592-46F1-A31F-9D8C2B959074}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,8 +28,13 @@ Global
 		{760ABBC2-D490-4B26-ADBA-D171543E6537}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{760ABBC2-D490-4B26-ADBA-D171543E6537}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{760ABBC2-D490-4B26-ADBA-D171543E6537}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4C1EE3F-8592-46F1-A31F-9D8C2B959074}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4C1EE3F-8592-46F1-A31F-9D8C2B959074}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4C1EE3F-8592-46F1-A31F-9D8C2B959074}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4C1EE3F-8592-46F1-A31F-9D8C2B959074}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{A4C1EE3F-8592-46F1-A31F-9D8C2B959074} = {E2DEEA9F-E533-4E67-9390-E3DA9D829AF6}
 		{7AB46389-0DD1-498C-A89C-96EDF3E61634} = {E2DEEA9F-E533-4E67-9390-E3DA9D829AF6}
 		{760ABBC2-D490-4B26-ADBA-D171543E6537} = {E2DEEA9F-E533-4E67-9390-E3DA9D829AF6}
 	EndGlobalSection
