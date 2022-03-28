@@ -1,3 +1,4 @@
+using AprsWeather.Shared;
 using AprsWeatherServer.BackgroundServices;
 
 var devCorsName = "DevelopmentCorsPolicy";
@@ -5,7 +6,9 @@ var devCorsName = "DevelopmentCorsPolicy";
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IDictionary<string, string>>(new Dictionary<string, string>());
+builder.Services.AddSingleton<IDictionary<string, WeatherReport<string>>>(
+    new Dictionary<string, WeatherReport<string>>());
+
 builder.Services.AddHostedService<AprsIsReceiver>();
 builder.Services.AddHostedService<ReportExpiry>();
 
