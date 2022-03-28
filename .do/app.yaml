@@ -6,7 +6,7 @@ services:
       branch: main
       deploy_on_push: false
     dockerfile_path: src/AprsWeatherServer/Dockerfile
-    source_dir: src/AprsWeatherServer
+    source_dir: src
     envs:
       - key: APRS_IS_CALLSIGN
         value: %APRS_IS_CALLSIGN%
@@ -22,7 +22,7 @@ static_sites:
       branch: main
       deploy_on_push: false
     dockerfile_path: src/AprsWeatherClient/Dockerfile
-    source_dir: src/AprsWeatherClient
+    source_dir: src
     output_dir: /usr/share/nginx/html
     routes:
       - path: /
