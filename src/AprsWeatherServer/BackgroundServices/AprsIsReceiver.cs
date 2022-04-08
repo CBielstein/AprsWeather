@@ -8,17 +8,18 @@ public class AprsIsReceiver: IHostedService
 {
     private readonly IDictionary<string, WeatherReport<string>> reports;
     private readonly ILogger<AprsIsReceiver> logger;
+
     private Task? receiveTask;
     private TcpConnection? tcpConnection;
     private AprsIsConnection? client;
     private bool attemptReconnect = true;
+
+    // Return any packets (less non-position types) within 50 km of Seattle's Space Needle
+    private const string filter = "r/47.620157/-122.349643/50 -t/oimqstu";
     private readonly string callsign = Environment.GetEnvironmentVariable("APRS_IS_CALLSIGN")
         ?? throw new ArgumentException("APRS_IS_CALLSIGN environment variable must be set.");
     private const string password = "-1";
     private const string server = "noam.aprs2.net";
-
-    // Return any packets (less non-position types) within 50 km of Seattle's Space Needle
-    private const string filter = "r/47.620157/-122.349643/50 -t/oimqstu";
 
     public AprsIsReceiver(
         IDictionary<string, WeatherReport<string>> reports,
