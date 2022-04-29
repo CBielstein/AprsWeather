@@ -50,28 +50,31 @@ public class AprsIsReceiver: IHostedService
     {
         logger.LogInformation("APRS-IS connection entered new state: {state}", newState);
 
-        if (client == null || newState == ConnectionState.Disconnected)
+        if (client != null && newState != ConnectionState.Disconnected)
         {
-            if (!attemptReconnect)
-            {
-                logger.LogInformation("Shutting down. Not attempting APRS-IS reconnection.");
-                return;
-            }
-            else if (client != null && newState == ConnectionState.Disconnected)
-            {
-                logger.LogWarning("APRS-IS connection failed. Reconnecting.");
-                Thread.Sleep(15000);
-            }
-
-            logger.LogInformation("Creating new {AprsIsClient}", nameof(AprsIsClient));
-
-            client = new AprsIsClient(clientLogger);
-
-            client.ReceivedPacket += StorePacket;
-            client.ChangedState += CreateConnection;
-
-            receiveTask = client.Receive(callsign, password, server, filter);
+            return;
         }
+
+        if (!attemptReconnect)
+        {
+            logger.LogInformation("Shutting down. Not attempting APRS-IS reconnection.");
+            return;
+        }
+
+        if (client != null)
+        {
+            logger.LogWarning("APRS-IS connection failed. Reconnecting.");
+            Thread.Sleep(15000);
+        }
+
+        logger.LogInformation("Creating new {AprsIsClient}", nameof(AprsIsClient));
+
+        client = new AprsIsClient(clientLogger);
+
+        client.ReceivedPacket += StorePacket;
+        client.ChangedState += CreateConnection;
+
+        receiveTask = client.Receive(callsign, password, server, filter);
     }
 
     private void StorePacket(Packet p)
