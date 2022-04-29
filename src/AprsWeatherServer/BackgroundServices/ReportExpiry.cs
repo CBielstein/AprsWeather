@@ -10,10 +10,9 @@ public class ReportExpiry: IHostedService
 {
     private readonly IDictionary<string, WeatherReport<string>> reports;
     private readonly ILogger<ReportExpiry> logger;
-    private Task? workerTask;
-    private readonly CancellationTokenSource workerTokenSource = new CancellationTokenSource();
     private readonly TimeSpan reportExpiry;
     private readonly int taskFrequencyMs;
+    private readonly Timer timer;
 
     public ReportExpiry(
         IDictionary<string, WeatherReport<string>> reports,
@@ -27,42 +26,38 @@ public class ReportExpiry: IHostedService
         reportExpiry = TimeSpan.FromMinutes(reportExpiryMinutes);
 
         taskFrequencyMs = int.Parse(configuration["ExpiryCheckFrequencyMinutes"]) * 60 * 1000;
+
+        timer = new Timer((object? _ ) => RemoveExpiredReports(), null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        var token = workerTokenSource.Token;
-        workerTask = Task.Run(() => RemoveExpiredReports(token), cancellationToken);
+        timer.Change(taskFrequencyMs, taskFrequencyMs);
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        workerTokenSource.Cancel();
-        return workerTask ?? Task.CompletedTask;
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+        return Task.CompletedTask;
     }
 
-    private async Task RemoveExpiredReports(CancellationToken stoppingToken)
+    private void RemoveExpiredReports()
     {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            IEnumerable<string> expiredKeys = reports
-                .Where(r =>
-                {
-                    var received = r.Value.ReceivedTime;
-                    var currentTimeAlive = received.Subtract(DateTimeOffset.UtcNow).Duration();
-                    return currentTimeAlive > reportExpiry;
-                })
-                .Select(r => r.Key);
-
-            logger.LogInformation("Removing the following keys: {keys}", string.Join(',', expiredKeys));
-
-            foreach (var expiredKey in expiredKeys)
+        IEnumerable<string> expiredKeys = reports
+            .Where(r =>
             {
-                reports.Remove(expiredKey);
-            }
+                var received = r.Value.ReceivedTime;
+                var currentTimeAlive = received.Subtract(DateTimeOffset.UtcNow).Duration();
+                return currentTimeAlive > reportExpiry;
+            })
+            .Select(r => r.Key);
 
-            await Task.Delay(taskFrequencyMs, stoppingToken);
+        logger.LogInformation("Removing the following keys: {keys}", string.Join(',', expiredKeys));
+
+        foreach (var expiredKey in expiredKeys)
+        {
+            reports.Remove(expiredKey);
         }
     }
 }
