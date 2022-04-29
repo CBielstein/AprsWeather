@@ -8,10 +8,10 @@ public class AprsIsReceiver: IHostedService
 {
     private readonly IDictionary<string, WeatherReport<string>> reports;
     private readonly ILogger<AprsIsReceiver> logger;
+    private readonly ILogger<AprsIsClient> clientLogger;
 
     private Task? receiveTask;
-    private TcpConnection? tcpConnection;
-    private AprsIsConnection? client;
+    private AprsIsClient? client;
     private bool attemptReconnect = true;
 
     // Return any packets (less non-position types) within 50 km of Seattle's Space Needle
@@ -23,10 +23,12 @@ public class AprsIsReceiver: IHostedService
 
     public AprsIsReceiver(
         IDictionary<string, WeatherReport<string>> reports,
-        ILogger<AprsIsReceiver> logger)
+        ILogger<AprsIsReceiver> logger,
+        ILogger<AprsIsClient> clientLogger)
     {
         this.reports = reports;
         this.logger = logger;
+        this.clientLogger = clientLogger;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -40,7 +42,7 @@ public class AprsIsReceiver: IHostedService
     {
         logger.LogInformation("Stopping service: {serviceName}", nameof(AprsIsReceiver));
         attemptReconnect = false;
-        tcpConnection?.Dispose();
+        client?.Disconnect();
         return receiveTask ?? Task.CompletedTask;
     }
 
@@ -50,23 +52,20 @@ public class AprsIsReceiver: IHostedService
 
         if (client == null || newState == ConnectionState.Disconnected)
         {
-            if (client != null && newState == ConnectionState.Disconnected)
+            if (!attemptReconnect)
             {
-                logger.LogWarning("APRS-IS connection failed.");
+                logger.LogInformation("Shutting down. Not attempting APRS-IS reconnection.");
+                return;
+            }
+            else if (client != null && newState == ConnectionState.Disconnected)
+            {
+                logger.LogWarning("APRS-IS connection failed. Reconnecting.");
                 Thread.Sleep(15000);
             }
 
-            if (!attemptReconnect)
-            {
-                logger.LogInformation("Not attempting APRS-IS reconnection.");
-                return;
-            }
+            logger.LogInformation("Creating new {AprsIsClient}", nameof(AprsIsClient));
 
-            logger.LogInformation("Creating new {AprsIsClient}", nameof(AprsIsConnection));
-
-            tcpConnection?.Dispose();
-            tcpConnection = new TcpConnection();
-            client = new AprsIsConnection(tcpConnection);
+            client = new AprsIsClient(clientLogger);
 
             client.ReceivedPacket += StorePacket;
             client.ChangedState += CreateConnection;
