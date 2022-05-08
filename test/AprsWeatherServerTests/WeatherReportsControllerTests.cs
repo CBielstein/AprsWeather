@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using AprsWeather.Shared;
+using AprsWeatherServer.BackgroundServices;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,12 @@ public class WeatherReportsControllerTests
                     .ConfigureTestServices(services =>
                     {
                         services.AddSingleton(reports);
+
+                        var receiver = services.Single(s => s.ImplementationType == typeof(AprsIsReceiver));
+                        services.Remove(receiver);
+
+                        var expiry = services.Single(s => s.ImplementationType == typeof(ReportExpiry));
+                        services.Remove(expiry);
                     })
                     .UseTestServer();
             });
