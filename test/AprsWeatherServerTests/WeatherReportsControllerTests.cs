@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Net.Http;
 using AprsWeather.Shared;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -10,17 +11,22 @@ namespace AprsWeatherServerTests;
 public class WeatherReportsControllerTests
 {
     public readonly IDictionary<string, WeatherReport<string>> reports = new Dictionary<string, WeatherReport<string>>();
+    public readonly HttpClient client;
 
     public WeatherReportsControllerTests()
     {
         var app = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(b =>
+            .WithWebHostBuilder(builder =>
             {
-                b.ConfigureTestServices(services =>
-                {
-                    services.AddSingleton<IDictionary<string, WeatherReport<string>>>(reports);
-                });
+                builder
+                    .ConfigureTestServices(services =>
+                    {
+                        services.AddSingleton(reports);
+                    })
+                    .UseTestServer();
             });
+
+        client = app.CreateClient();
     }
 
     /// <summary>
