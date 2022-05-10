@@ -13,7 +13,7 @@ public class WeatherReport<T>
     /// Represents the time this <see cref="WeatherReport"/>
     /// was received by the server.
     /// </summary>
-    public DateTimeOffset ReceivedTime { get; set; }
+    public DateTimeOffset ReceivedTime { get; set; } = DateTimeOffset.UtcNow;
 
     /// <summary>
     /// The report itself.
