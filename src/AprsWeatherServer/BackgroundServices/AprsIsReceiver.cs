@@ -83,7 +83,6 @@ public class AprsIsReceiver: IHostedService
         {
             reports[p.Sender] = new WeatherReport<string>()
             {
-                ReceivedTime = DateTimeOffset.UtcNow,
                 Report = p.Encode(),
             };
         }
