@@ -18,9 +18,21 @@ public class WeatherReportsController : ControllerBase
         this.reports = reports;
     }
 
+    /// <summary>
+    /// Gets <see cref="WeatherReport"/>s held by the server.
+    /// </summary>
+    /// <param name="limit">Limits number of reports to the number given.</param>
+    /// <returns><see cref="WeatherReport"/>s filtered or limited as requested.</returns>
     [HttpGet(Name = "GetWeatherReports")]
-    public IEnumerable<WeatherReport<string>> Get()
+    public IEnumerable<WeatherReport<string>> Get([FromQuery]int? limit)
     {
-        return reports.Values;
+        var packets = reports.Values;
+
+        if (limit != null)
+        {
+            packets = packets.Take(limit.Value).ToList();
+        }
+
+        return packets;
     }
 }
