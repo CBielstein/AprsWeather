@@ -78,6 +78,27 @@ public class WeatherReportsControllerTests
     }
 
     /// <summary>
+    /// Verifies that the limit parameter is respected.
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task TestLimitReports()
+    {
+        var packets = new[]
+        {
+            @"N0CALL-1>WIDE2-2:/092345z4903.50N/07201.75W_180/010g015t068r001p011P010h99b09901l010#010s050 Testing WX packet.",
+            @"N0CALL-2>WIDE1-1:/092345z4903.50N/07201.75W_180/010 Testing WX packet #2.",
+            @"N0CALL-3>WIDE1-1:/092345z4903.50N/07201.75W_180/010 Testing WX packet #3.",
+            @"N0CALL-4>WIDE1-1:/092345z4903.50N/07201.75W_180/010 Testing WX packet #4.",
+            @"N0CALL-5>WIDE1-1:/092345z4903.50N/07201.75W_180/010 Testing WX packet #5.",
+        };
+        SetServerReports(packets);
+
+        var reports = await GetReports(limit: 3);
+        Assert.Equal(3, reports.Count());
+    }
+
+    /// <summary>
     /// Resets the reports held by the server to the value given.
     /// Clears the existing reports first, so if the new list is empty, the server will
     /// have no reports.
@@ -106,12 +127,21 @@ public class WeatherReportsControllerTests
     /// <summary>
     /// Gets <see cref="WeatherReport"/>s from the test server
     /// </summary>
-    /// <param name="expected"></param>
+    /// <param name="expectedStatus">Assert response code matches this.</param>
+    /// <param name="limit">Limit parameter to pass with request.</param>
     /// <returns>List of <see cref="WeatherReport"/>.</returns>
-    private async Task<IEnumerable<WeatherReport<string>>> GetReports(HttpStatusCode expectedStatus = HttpStatusCode.OK)
+    private async Task<IEnumerable<WeatherReport<string>>> GetReports(
+        HttpStatusCode expectedStatus = HttpStatusCode.OK,
+        int? limit = null)
     {
-        // var response = await client.GetAsync<IEnumerable<WeatherReport<string>>>("/WeatherReports");
-        var response = await client.GetAsync("/WeatherReports");
+        var request = "/WeatherReports";
+
+        if (limit != null)
+        {
+            request += $"?limit={limit}";
+        }
+
+        var response = await client.GetAsync(request);
         Assert.Equal(expectedStatus, response.StatusCode);
 
         return await response.Content.ReadFromJsonAsync<IEnumerable<WeatherReport<string>>>()
