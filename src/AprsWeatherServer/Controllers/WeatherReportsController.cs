@@ -1,3 +1,4 @@
+using AprsSharp.Parsers.Aprs;
 using AprsWeather.Shared;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,7 +34,9 @@ public class WeatherReportsController : ControllerBase
 
         if (location != null)
         {
-            throw new NotImplementedException();
+            var locationPosition = new Position();
+            locationPosition.DecodeMaidenhead(location);
+            packets = packets.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.Coordinates.GetDistanceTo(locationPosition.Coordinates)).ToList();
         }
 
         if (limit != null)
