@@ -18,7 +18,7 @@ namespace AprsWeatherServerTests;
 
 public class WeatherReportsControllerTests
 {
-    public readonly IDictionary<string, WeatherReport<string>> serverReports = new Dictionary<string, WeatherReport<string>>();
+    public readonly IDictionary<string, WeatherReport> serverReports = new Dictionary<string, WeatherReport>();
     public readonly HttpClient client;
 
     public WeatherReportsControllerTests()
@@ -58,7 +58,7 @@ public class WeatherReportsControllerTests
         Assert.Equal(2, response.Count());
 
         // Assert all reports are present
-        var reports = response.Select(r => r.Report);
+        var reports = response.Select(r => r.Packet.Encode());
         Assert.Contains(packet1, reports);
         Assert.Contains(packet2, reports);
 
@@ -116,7 +116,7 @@ public class WeatherReportsControllerTests
 
         var ordering = reports.Select(r =>
         {
-            var last = r.Report.Last();
+            var last = (r.Packet.InfoField as WeatherInfo)!.Comment!.Last();
             return char.GetNumericValue(last);
         }).ToArray();
 
@@ -144,9 +144,9 @@ public class WeatherReportsControllerTests
 
                 serverReports.Add(
                     packet.Sender,
-                    new WeatherReport<string>()
+                    new WeatherReport()
                     {
-                        Report = report,
+                        Packet = packet,
                     });
             }
         }
@@ -159,7 +159,7 @@ public class WeatherReportsControllerTests
     /// <param name="limit">Limit parameter to pass with request.</param>
     /// <param name="location">Location paramater to pass with request.</param>
     /// <returns>List of <see cref="WeatherReport"/>.</returns>
-    private async Task<IEnumerable<WeatherReport<string>>> GetReports(
+    private async Task<IEnumerable<WeatherReport>> GetReports(
         HttpStatusCode expectedStatus = HttpStatusCode.OK,
         int? limit = null,
         string? location = null)
@@ -180,7 +180,7 @@ public class WeatherReportsControllerTests
         var response = await client.GetAsync(request);
         Assert.Equal(expectedStatus, response.StatusCode);
 
-        return await response.Content.ReadFromJsonAsync<IEnumerable<WeatherReport<string>>>()
-            ?? Enumerable.Empty<WeatherReport<string>>();
+        return await response.Content.ReadFromJsonAsync<IEnumerable<WeatherReport>>()
+            ?? Enumerable.Empty<WeatherReport>();
     }
 }

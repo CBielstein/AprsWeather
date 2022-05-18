@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AprsSharp.AprsParser" Version="0.2.1" />
+  </ItemGroup>
+
 </Project>

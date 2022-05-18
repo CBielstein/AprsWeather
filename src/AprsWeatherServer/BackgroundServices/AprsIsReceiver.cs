@@ -6,7 +6,7 @@ namespace AprsWeatherServer.BackgroundServices;
 
 public class AprsIsReceiver: IHostedService
 {
-    private readonly IDictionary<string, WeatherReport<string>> reports;
+    private readonly IDictionary<string, WeatherReport> reports;
     private readonly ILogger<AprsIsReceiver> logger;
     private readonly ILogger<AprsIsClient> clientLogger;
 
@@ -22,7 +22,7 @@ public class AprsIsReceiver: IHostedService
     private const string server = "noam.aprs2.net";
 
     public AprsIsReceiver(
-        IDictionary<string, WeatherReport<string>> reports,
+        IDictionary<string, WeatherReport> reports,
         ILogger<AprsIsReceiver> logger,
         ILogger<AprsIsClient> clientLogger)
     {
@@ -81,9 +81,9 @@ public class AprsIsReceiver: IHostedService
     {
         if (p.InfoField is WeatherInfo)
         {
-            reports[p.Sender] = new WeatherReport<string>()
+            reports[p.Sender] = new WeatherReport()
             {
-                Report = p.Encode(),
+                Packet = p,
             };
         }
     }

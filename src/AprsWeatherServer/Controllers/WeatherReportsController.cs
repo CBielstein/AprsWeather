@@ -8,11 +8,11 @@ namespace AprsWeatherServer.Controllers;
 public class WeatherReportsController : ControllerBase
 {
     private readonly ILogger<WeatherReportsController> logger;
-    private readonly IDictionary<string, WeatherReport<string>> reports;
+    private readonly IDictionary<string, WeatherReport> reports;
 
     public WeatherReportsController(
         ILogger<WeatherReportsController> logger,
-        IDictionary<string, WeatherReport<string>> reports)
+        IDictionary<string, WeatherReport> reports)
     {
         this.logger = logger;
         this.reports = reports;
@@ -25,7 +25,7 @@ public class WeatherReportsController : ControllerBase
     /// <param name="location">Sorts by the proximity to a given location (specified as the centerpoint of a gridsquare).</param>
     /// <returns><see cref="WeatherReport"/>s filtered or limited as requested.</returns>
     [HttpGet(Name = "GetWeatherReports")]
-    public IEnumerable<WeatherReport<string>> Get(
+    public IEnumerable<WeatherReport> Get(
         [FromQuery] int? limit,
         [FromQuery] string? location)
     {
