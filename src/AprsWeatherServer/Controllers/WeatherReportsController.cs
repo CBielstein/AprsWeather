@@ -22,11 +22,19 @@ public class WeatherReportsController : ControllerBase
     /// Gets <see cref="WeatherReport"/>s held by the server.
     /// </summary>
     /// <param name="limit">Limits number of reports to the number given.</param>
+    /// <param name="location">Sorts by the proximity to a given location (specified as the centerpoint of a gridsquare).</param>
     /// <returns><see cref="WeatherReport"/>s filtered or limited as requested.</returns>
     [HttpGet(Name = "GetWeatherReports")]
-    public IEnumerable<WeatherReport<string>> Get([FromQuery]int? limit)
+    public IEnumerable<WeatherReport<string>> Get(
+        [FromQuery] int? limit,
+        [FromQuery] string? location)
     {
         var packets = reports.Values;
+
+        if (location != null)
+        {
+            throw new NotImplementedException();
+        }
 
         if (limit != null)
         {
