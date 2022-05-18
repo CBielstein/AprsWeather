@@ -100,29 +100,33 @@ public class WeatherReportsControllerTests
     /// <summary>
     /// Verifies that the location parameter is used to order the returned packets.
     /// </summary>
-    [Fact]
-    public async Task TestOrderByLocation()
+    /// <param name="limit">Test variations in limit with order by location.</param>
+    /// <returns></returns>
+    [Theory]
+    [InlineData(null)]
+    [InlineData(3)]
+    public async Task TestOrderByLocation(int? limit)
     {
-        SetServerReports(new[]
+        // The last character of the callsign (N0CALL-x) is the expected ordering
+        var serverReports = new[]
         {
-            @"N0CALL-5>WIDE1-1:/092345z1000.00S/01000.00W_180/010 Order: 5",
-            @"N0CALL-3>WIDE1-1:/092345z0010.00S/00010.00W_180/010 Order: 3",
-            @"N0CALL-1>WIDE1-1:/092345z0001.00N/00010.00W_180/010 Order: 1",
-            @"N0CALL-4>WIDE1-1:/092345z0100.00S/00100.00E_180/010 Order: 4",
-            @"N0CALL-2>WIDE1-1:/092345z0001.50N/00010.50W_180/010 Order: 2",
-        });
+            @"N0CALL-5>WIDE1-1:/092345z1000.00S/01000.00W_180/010",
+            @"N0CALL-3>WIDE1-1:/092345z0010.00S/00010.00W_180/010",
+            @"N0CALL-1>WIDE1-1:/092345z0001.00N/00010.00W_180/010",
+            @"N0CALL-4>WIDE1-1:/092345z0100.00S/00100.00E_180/010",
+            @"N0CALL-2>WIDE1-1:/092345z0001.50N/00010.50W_180/010",
+        };
+        SetServerReports(serverReports);
 
-        var reports = await GetReports(location: "JJ00aa");
+        var reports = await GetReports(location: "JJ00aa", limit: limit);
 
-        var ordering = reports.Select(r =>
+        Assert.Equal(limit ?? serverReports.Length, reports.Count());
+
+        // Assert the ordering is correct
+        for (var i = 1; i <= (limit ?? reports.Count()); ++i)
         {
-            var last = (r.Packet.InfoField as WeatherInfo)!.Comment!.Last();
-            return char.GetNumericValue(last);
-        }).ToArray();
-
-        for (var i = 1; i <= ordering.Length; ++i)
-        {
-            Assert.Equal(i, ordering[i - 1]);
+            var number = reports.ElementAt(i - 1).Packet.Sender.Last();
+            Assert.Equal(i, char.GetNumericValue(number));
         }
     }
 
