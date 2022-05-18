@@ -6,8 +6,8 @@ var devCorsName = "DevelopmentCorsPolicy";
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IDictionary<string, WeatherReport<string>>>(
-    new Dictionary<string, WeatherReport<string>>());
+builder.Services.AddSingleton<IDictionary<string, WeatherReport>>(
+    new Dictionary<string, WeatherReport>());
 
 builder.Services.AddHostedService<AprsIsReceiver>();
 builder.Services.AddHostedService<ReportExpiry>();

@@ -8,14 +8,14 @@ namespace AprsWeatherServer.BackgroundServices;
 /// </summary>
 public class ReportExpiry: IHostedService
 {
-    private readonly IDictionary<string, WeatherReport<string>> reports;
+    private readonly IDictionary<string, WeatherReport> reports;
     private readonly ILogger<ReportExpiry> logger;
     private readonly TimeSpan reportExpiry;
     private readonly int taskFrequencyMs;
     private readonly Timer timer;
 
     public ReportExpiry(
-        IDictionary<string, WeatherReport<string>> reports,
+        IDictionary<string, WeatherReport> reports,
         IConfiguration configuration,
         ILogger<ReportExpiry> logger)
     {

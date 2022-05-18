@@ -27,10 +27,10 @@ else
         <tbody>
             @foreach (var report in reports)
             {
-                if (report.Report.InfoField is WeatherInfo wi)
+                if (report.Packet.InfoField is WeatherInfo wi)
                 {
                     <tr>
-                        <td>@report.Report.Sender</td>
+                        <td>@report.Packet.Sender</td>
                         <td>@wi.Position.EncodeGridsquare(6, false)</td>
                         <td>@report.ReceivedTime.MinutesSince() minutes ago</td>
                         <td>@wi.Temperature</td>
@@ -42,7 +42,7 @@ else
 }
 
 @code {
-    private IEnumerable<WeatherReport<Packet>>? reports;
+    private IEnumerable<WeatherReport>? reports;
     private HttpClient client = new HttpClient();
     private string? apiAddress;
 
@@ -53,18 +53,10 @@ else
             apiAddress = Configuration["ServerAddress"];
         }
 
-        var response = await client.GetFromJsonAsync<WeatherReport<string>[]>($"{apiAddress}/WeatherReports");
-
-        // Decode
-        var decodedReports = response?.Select(r =>
-            new WeatherReport<Packet>()
-            {
-                Report = new Packet(r.Report),
-                ReceivedTime = r.ReceivedTime,
-            });
+        var received = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports");
 
         // Order by Gridsquare
-        reports = decodedReports?.OrderBy(r => (r.Report.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
+        reports = received?.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
     }
 
     protected override async Task OnInitializedAsync()

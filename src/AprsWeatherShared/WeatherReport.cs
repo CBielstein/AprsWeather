@@ -1,13 +1,12 @@
-﻿namespace AprsWeather.Shared;
+﻿using System.Text.Json.Serialization;
+using AprsSharp.Parsers.Aprs;
+
+namespace AprsWeather.Shared;
 
 /// <summary>
 /// Used to store and transfer APRS weather reports and related information.
 /// </summary>
-/// <typeparam name="T">
-///     The type of the report.
-///     Likely <see cref="string"/> or an AprsSharp Packet.
-/// </typeparam>
-public class WeatherReport<T>
+public class WeatherReport
 {
     /// <summary>
     /// Represents the time this <see cref="WeatherReport"/>
@@ -17,7 +16,7 @@ public class WeatherReport<T>
 
     /// <summary>
     /// The report itself.
-    /// Likely a <see cref="string"/> encoded packet or AprsSharp Packet object.
     /// </summary>
-    public T Report { get; set; } = default!;
+    [JsonConverter(typeof(PacketJsonConverter))]
+    public Packet Packet { get; set; } = default!;
 }
