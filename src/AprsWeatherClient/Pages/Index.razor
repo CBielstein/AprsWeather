@@ -9,7 +9,17 @@
 
 <h1>Current Seattle Weather</h1>
 
-@if (reports == null)
+<div>
+    <a>Gridsquare: </a>
+    <input id="userGridsquareBox" placeholder="CN87to88" @bind="userGridsquare"/>
+    <button @onclick="UpdateReports">Get Weather!</button>
+</div>
+
+@if (userGridsquare == null)
+{
+    <p><em>Input location...</em></p>
+}
+else if (reports == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -45,6 +55,7 @@ else
     private IEnumerable<WeatherReport>? reports;
     private HttpClient client = new HttpClient();
     private string? apiAddress;
+    private string? userGridsquare;
 
     private async Task UpdateReports()
     {
@@ -53,7 +64,7 @@ else
             apiAddress = Configuration["ServerAddress"];
         }
 
-        var received = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/All");
+        var received = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=1");
 
         // Order by Gridsquare
         reports = received?.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
