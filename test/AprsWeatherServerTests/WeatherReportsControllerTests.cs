@@ -20,6 +20,8 @@ public class WeatherReportsControllerTests
 {
     public readonly IDictionary<string, WeatherReport> serverReports = new Dictionary<string, WeatherReport>();
     public readonly HttpClient client;
+    private const string allReportsEndpoint = "WeatherReports/All";
+    private const string reportsNearEndpoint = "WeatherReports/Near";
 
     public WeatherReportsControllerTests()
     {
@@ -53,7 +55,7 @@ public class WeatherReportsControllerTests
         var packet2 = @"N0CALL-2>WIDE1-1:/092345z4903.50N/07201.75W_180/010 Testing WX packet #2.";
         SetServerReports(new[] { packet1, packet2 });
 
-        var response = await GetReports();
+        var response = await GetReports(allReportsEndpoint) ?? throw new Exception("Server response should not be null here");
 
         Assert.Equal(2, response.Count());
 
@@ -74,7 +76,7 @@ public class WeatherReportsControllerTests
     {
         SetServerReports();
 
-        var reports = await GetReports();
+        var reports = await GetReports(allReportsEndpoint);
         Assert.Empty(reports);
     }
 
@@ -82,13 +84,14 @@ public class WeatherReportsControllerTests
     /// Verifies that the limit parameter is respected and changes how many packets are returned.
     /// </summary>
     /// <param name="limit">Limit on reports to request.</param>
+    /// <param name="expectedCode">Expected response code from the server, allowing testing of success and failures.</param>
     [Theory]
-    [InlineData(3)]
-    [InlineData(5)]
-    [InlineData(1)]
-    [InlineData(0)]
-    [InlineData(100)]
-    public async Task TestLimitReports(int limit)
+    [InlineData(3, HttpStatusCode.OK)]
+    [InlineData(5, HttpStatusCode.OK)]
+    [InlineData(1, HttpStatusCode.OK)]
+    [InlineData(0, HttpStatusCode.InternalServerError)] // TODO: Issue 14
+    [InlineData(100, HttpStatusCode.InternalServerError)] // TODO: Issue 14
+    public async Task TestLimitReports(int limit, HttpStatusCode expectedCode)
     {
         var serverReports = new[]
         {
@@ -100,20 +103,34 @@ public class WeatherReportsControllerTests
         };
         SetServerReports(serverReports);
 
-        var reports = await GetReports(limit: limit);
+        var args = new Dictionary<string, string?>();
+        args.Add("limit", limit.ToString());
+        args.Add("location", "JJ00aa");
+
+        var reports = await GetReports(reportsNearEndpoint, args: args, expectedStatus: expectedCode);
+
+        if (expectedCode == HttpStatusCode.InternalServerError)
+        {
+            Assert.Null(reports);
+            return;
+        }
 
         // Can't be more reports returned than what the server holds
-        Assert.Equal(Math.Min(limit, serverReports.Length), reports.Count());
+        Assert.Equal(Math.Min(limit, serverReports.Length), reports!.Count());
     }
 
     /// <summary>
     /// Verifies that the location parameter is used to order the returned packets.
     /// </summary>
     /// <param name="limit">Test variations in limit with order by location.</param>
+    /// <param name="expectedCode">Expected response code from the server, allowing testing of success and failures.</param>
     [Theory]
-    [InlineData(null)]
-    [InlineData(3)]
-    public async Task TestOrderByLocation(int? limit)
+    [InlineData(null, HttpStatusCode.OK)]
+    [InlineData(0, HttpStatusCode.InternalServerError)] // TODO: Issue 14
+    [InlineData(11, HttpStatusCode.InternalServerError)] // TODO: Issue 14
+    [InlineData(3, HttpStatusCode.OK)]
+    [InlineData(1, HttpStatusCode.OK)]
+    public async Task TestOrderByLocation(int? limit, HttpStatusCode expectedCode)
     {
         // The last character of the callsign (N0CALL-x) is the expected ordering
         var serverReports = new[]
@@ -126,14 +143,29 @@ public class WeatherReportsControllerTests
         };
         SetServerReports(serverReports);
 
-        var reports = await GetReports(location: "JJ00aa", limit: limit);
+        var args = new Dictionary<string, string?>();
+        args.Add("location", "JJ00aa");
 
-        Assert.Equal(limit ?? serverReports.Length, reports.Count());
+        // Test default limit == 1
+        if (limit != null)
+        {
+            args.Add("limit", limit.ToString());
+        }
+
+        var reports = await GetReports(reportsNearEndpoint, args: args, expectedStatus: expectedCode);
+
+        if (expectedCode == HttpStatusCode.InternalServerError)
+        {
+            Assert.Null(reports);
+            return;
+        }
+
+        Assert.Equal(limit ?? 1, reports!.Count());
 
         // Assert the ordering is correct
-        for (var i = 1; i <= (limit ?? reports.Count()); ++i)
+        for (var i = 1; i <= (limit ?? reports!.Count()); ++i)
         {
-            var number = reports.ElementAt(i - 1).Packet.Sender.Last();
+            var number = reports!.ElementAt(i - 1).Packet.Sender.Last();
             Assert.Equal(i, char.GetNumericValue(number));
         }
     }
@@ -193,28 +225,26 @@ public class WeatherReportsControllerTests
     /// <param name="limit">Limit parameter to pass with request.</param>
     /// <param name="location">Location paramater to pass with request.</param>
     /// <returns>List of <see cref="WeatherReport"/>.</returns>
-    private async Task<IEnumerable<WeatherReport>> GetReports(
+    private async Task<IEnumerable<WeatherReport>?> GetReports(
+        string endpoint,
         HttpStatusCode expectedStatus = HttpStatusCode.OK,
-        int? limit = null,
-        string? location = null)
+        IDictionary<string, string?>? args = null)
     {
-        var args = new Dictionary<string, string?>(2);
+        var request = endpoint;
 
-        if (limit != null)
+        if (args != null)
         {
-            args.Add("limit", limit.ToString());
+            request = QueryHelpers.AddQueryString(endpoint, args);
         }
 
-        if (location != null)
-        {
-            args.Add("location", location);
-        }
-
-        var request = QueryHelpers.AddQueryString("/WeatherReports", args);
         var response = await client.GetAsync(request);
         Assert.Equal(expectedStatus, response.StatusCode);
 
-        return await response.Content.ReadFromJsonAsync<IEnumerable<WeatherReport>>()
-            ?? Enumerable.Empty<WeatherReport>();
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<IEnumerable<WeatherReport>>();
     }
 }

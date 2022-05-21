@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AprsWeatherServer.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("[controller]/[action]")]
 public class WeatherReportsController : ControllerBase
 {
     private readonly ILogger<WeatherReportsController> logger;
@@ -20,30 +20,50 @@ public class WeatherReportsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets <see cref="WeatherReport"/>s held by the server.
+    /// Gets all <see cref="WeatherReport"/>s held by the server.
     /// </summary>
-    /// <param name="limit">Limits number of reports to the number given.</param>
-    /// <param name="location">Sorts by the proximity to a given location (specified as the centerpoint of a gridsquare).</param>
-    /// <returns><see cref="WeatherReport"/>s filtered or limited as requested.</returns>
-    [HttpGet(Name = "GetWeatherReports")]
-    public IEnumerable<WeatherReport> Get(
-        [FromQuery] int? limit,
-        [FromQuery] string? location)
+    /// <returns>A list of <see cref="WeatherReport"/>s</returns>
+    [HttpGet(Name = "GetAllWeatherReports")]
+    public IEnumerable<WeatherReport> All()
     {
-        var packets = reports.Values;
+        return reports.Values;
+    }
 
-        if (location != null)
+    /// <summary>
+    /// Gets <see cref="WeatherReport"/>s near a given location.
+    /// </summary>
+    /// <param name="location">Sorts by the proximity to a given location (specified as the centerpoint of a gridsquare).</param>
+    /// <param name="limit">Limits number of reports to the number given, default is 1.</param>
+    /// <returns><see cref="WeatherReport"/>s filtered and limited as requested.</returns>
+    [HttpGet(Name = "GetWeatherReportsNearLocation")]
+    public IEnumerable<WeatherReport> Near(
+        [FromQuery] string location,
+        [FromQuery] int limit = 1)
+    {
+        if (string.IsNullOrEmpty(location))
         {
-            var locationPosition = new Position();
-            locationPosition.DecodeMaidenhead(location);
-            packets = packets.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.Coordinates.GetDistanceTo(locationPosition.Coordinates)).ToList();
+            throw new ArgumentNullException(nameof(location));
+        }
+        else if (limit < 1 || limit > 10)
+        {
+            throw new ArgumentOutOfRangeException(nameof(limit), $"{nameof(limit)} should be in range [1, 10]");
         }
 
-        if (limit != null)
-        {
-            packets = packets.Take(limit.Value).ToList();
-        }
+        var locationPosition = new Position();
+        locationPosition.DecodeMaidenhead(location);
 
-        return packets;
+        return reports.Values
+            .OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.Coordinates.GetDistanceTo(locationPosition.Coordinates))
+            .Take(limit);
+    }
+
+    /// <summary>
+    /// Returns the total number of <see cref="WeatherReport"/>s currently held by the server.
+    /// </summary>
+    /// <returns>The count of currently-held <see cref="WeatherReport"/>s.</returns>
+    [HttpGet(Name = "GetTotalWeatherReportCount")]
+    public int Count()
+    {
+        return reports.Count;
     }
 }
