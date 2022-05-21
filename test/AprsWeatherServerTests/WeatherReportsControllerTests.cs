@@ -138,6 +138,28 @@ public class WeatherReportsControllerTests
         }
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(5)]
+    [InlineData(0)]
+    [InlineData(30)]
+    public async Task TestCount(int count)
+    {
+        var reports = new string[count];
+
+        for (int i = 0; i < count; ++i)
+        {
+            reports[i] = $"N0CALL-{i}>WIDE2-2:/092345z4903.50N/07201.75W_180/010 Testing WX packet #{i}.";
+        }
+
+        SetServerReports(reports);
+
+        var response = await client.GetAsync("/WeatherReports/Count");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var serverCount = await response.Content.ReadAsStringAsync();
+        Assert.Equal(count, int.Parse(serverCount));
+    }
+
     /// <summary>
     /// Resets the reports held by the server to the value given.
     /// Clears the existing reports first, so if the new list is empty, the server will
