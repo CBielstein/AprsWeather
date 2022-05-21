@@ -53,7 +53,7 @@ else
             apiAddress = Configuration["ServerAddress"];
         }
 
-        var received = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports");
+        var received = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/All");
 
         // Order by Gridsquare
         reports = received?.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
