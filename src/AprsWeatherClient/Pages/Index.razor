@@ -19,7 +19,7 @@
 {
     <p><em>Input location...</em></p>
 }
-else if (reports == null)
+else if (reports?.Any() != true)
 {
     <p><em>Loading...</em></p>
 }
@@ -28,24 +28,42 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Callsign</th>
-                <th>Location</th>
-                <th>Time</th>
-                <th>Temp. (F)</th>
+                <th>Measurement</th>
+                <th>Reading</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var report in reports)
+            @if (reports.First().Packet.InfoField is WeatherInfo wi)
             {
-                if (report.Packet.InfoField is WeatherInfo wi)
-                {
-                    <tr>
-                        <td>@report.Packet.Sender</td>
-                        <td>@wi.Position.EncodeGridsquare(6, false)</td>
-                        <td>@report.ReceivedTime.MinutesSince() minutes ago</td>
-                        <td>@wi.Temperature</td>
-                    </tr>
-                }
+                <tr>
+                    <td>Temp (F)</td>
+                    <td>@wi.Temperature</td>
+                </tr>
+
+                <tr>
+                    <td>Rain Today</td>
+                    <td>@wi.RainfallSinceMidnight</td>
+                </tr>
+
+                <tr>
+                    <td>Minutes Ago</td>
+                    <td>@reports.First().ReceivedTime.MinutesSince() minutes ago</td>
+                </tr>
+
+                <tr>
+                    <td>Distance (km)</td>
+                    <td>@Math.Round((wi.Position.Coordinates.GetDistanceTo(userPosition.Coordinates) / 1000.0), 2)</td>
+                </tr>
+
+                <tr>
+                    <td>Gridsquare</td>
+                    <td>@wi.Position.EncodeGridsquare(8, false)</td>
+                </tr>
+
+                <tr>
+                    <td>Reported By</td>
+                    <td>@reports.First().Packet.Sender</td>
+                </tr>
             }
         </tbody>
     </table>
@@ -56,6 +74,7 @@ else
     private HttpClient client = new HttpClient();
     private string? apiAddress;
     private string? userGridsquare;
+    private Position? userPosition;
 
     private async Task UpdateReports()
     {
@@ -64,14 +83,11 @@ else
             apiAddress = Configuration["ServerAddress"];
         }
 
+        userPosition = new Position();
+        userPosition.DecodeMaidenhead(userGridsquare);
         var received = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=1");
 
         // Order by Gridsquare
         reports = received?.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await UpdateReports();
     }
 }
