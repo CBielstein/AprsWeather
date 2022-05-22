@@ -3,6 +3,7 @@
 @using AprsWeather.Shared
 @using Microsoft.Extensions.Configuration
 @using AprsWeatherClient.Extensions
+@using System.Collections.Generic
 @inject IConfiguration Configuration
 
 <PageTitle>APRS Weather</PageTitle>
@@ -11,7 +12,7 @@
 
 <div>
     <a>Gridsquare: </a>
-    <input id="userGridsquareBox" placeholder="CN87to88" @bind="userGridsquare"/>
+    <input id="userGridsquareBox" placeholder="CN87to" @bind="userGridsquare"/>
     <button @onclick="UpdateReports">Get Weather!</button>
 </div>
 
@@ -51,13 +52,8 @@ else
                 </tr>
 
                 <tr>
-                    <td>Distance (km)</td>
-                    <td>@Math.Round((wi.Position.Coordinates.GetDistanceTo(userPosition.Coordinates) / 1000.0), 2)</td>
-                </tr>
-
-                <tr>
-                    <td>Gridsquare</td>
-                    <td>@wi.Position.EncodeGridsquare(8, false)</td>
+                    <td>Location</td>
+                    <td>@ReportLocation(wi.Position)</td>
                 </tr>
 
                 <tr>
@@ -75,9 +71,34 @@ else
     private string? apiAddress;
     private string? userGridsquare;
     private Position? userPosition;
+    private static SortedDictionary<double, string> directionDictionary = new SortedDictionary<double, string>()
+        {
+            { 11.25, "N" },
+            { 33.75, "NNE" },
+            { 56.25, "NE" },
+            { 78.75, "ENE" },
+            { 101.25, "E" },
+            { 123.75, "ESE" },
+            { 146.25, "SE" },
+            { 168.75, "SSE" },
+            { 191.25, "S" },
+            { 213.75, "SSW" },
+            { 236.25, "SW" },
+            { 258.75, "WSW" },
+            { 281.25, "W" },
+            { 303.75, "WNW" },
+            { 326.25, "NW" },
+            { 348.75, "NNW" },
+            { 360, "N" },
+        };
 
     private async Task UpdateReports()
     {
+        if (string.IsNullOrWhiteSpace(userGridsquare))
+        {
+            return;
+        }
+
         if (apiAddress == null)
         {
             apiAddress = Configuration["ServerAddress"];
@@ -89,5 +110,30 @@ else
 
         // Order by Gridsquare
         reports = received?.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
+    }
+
+    /// <summary>
+    /// Creates the string showing the distance and direction to a report for the UI to display
+    /// </summary>
+    /// <param name="reportPosition"><see cref="Position"/> of the report</param>
+    /// <returns>String ready for display in the UI</returns>
+    private string ReportLocation(Position reportPosition)
+    {
+        if (userPosition == null)
+        {
+            return string.Empty;
+        }
+
+        var distance = Math.Round((reportPosition.Coordinates.GetDistanceTo(userPosition.Coordinates) / 1000.0), 2);
+        var direction = Math.Atan2(
+            reportPosition.Coordinates.Latitude - userPosition.Coordinates.Latitude,
+            reportPosition.Coordinates.Longitude - userPosition.Coordinates.Longitude);
+
+        // ensure direction is positive
+        direction = (direction + 360.0) % 360.0;
+
+        string directionSymbol = directionDictionary.First(entry => direction < entry.Key).Value;
+
+        return $"{distance} km {directionSymbol}";
     }
 }
