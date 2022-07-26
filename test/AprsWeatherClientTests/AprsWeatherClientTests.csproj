@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AprsWeatherServer\AprsWeatherClient.csproj" />
+    <ProjectReference Include="..\..\src\AprsWeatherClient\AprsWeatherClient.csproj" />
   </ItemGroup>
 
 </Project>
