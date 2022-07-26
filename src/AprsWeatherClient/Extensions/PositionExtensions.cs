@@ -1,4 +1,5 @@
 using AprsSharp.Parsers.Aprs;
+using Geolocation;
 
 namespace AprsWeatherClient.Extensions;
 
@@ -7,28 +8,6 @@ namespace AprsWeatherClient.Extensions;
 /// </summary>
 public static class PositionExtensions
 {
-    private static readonly SortedDictionary<double, string> directionDictionary = new SortedDictionary<double, string>()
-        {
-            { 11.25, "N" },
-            { 33.75, "NNE" },
-            { 56.25, "NE" },
-            { 78.75, "ENE" },
-            { 101.25, "E" },
-            { 123.75, "ESE" },
-            { 146.25, "SE" },
-            { 168.75, "SSE" },
-            { 191.25, "S" },
-            { 213.75, "SSW" },
-            { 236.25, "SW" },
-            { 258.75, "WSW" },
-            { 281.25, "W" },
-            { 303.75, "WNW" },
-            { 326.25, "NW" },
-            { 348.75, "NNW" },
-            { 360, "N" },
-        };
-
-
     /// <summary>
     /// Calculates a distance from a user position to a report position
     /// </summary>
@@ -42,7 +21,11 @@ public static class PositionExtensions
             return null;
         }
 
-        return Math.Round((reportPosition.Coordinates.GetDistanceTo(userPosition.Coordinates) / 1000.0), 2);
+        return GeoCalculator.GetDistance(
+            userPosition.Coordinates.Latitude,
+            userPosition.Coordinates.Longitude,
+            reportPosition.Coordinates.Latitude,
+            reportPosition.Coordinates.Longitude);
     }
 
     /// <summary>
@@ -58,19 +41,10 @@ public static class PositionExtensions
             return null;
         }
 
-        var directionRadians = Math.Atan2(
-            reportPosition.Coordinates.Latitude - userPosition.Coordinates.Latitude,
-            reportPosition.Coordinates.Longitude - userPosition.Coordinates.Longitude);
-
-        // convert to degrees
-        var direction = directionRadians * 180.0 / Math.PI;
-
-        // Convert from unit circle (0 is along X) to compass (0 is north)
-        direction -= 90;
-
-        // ensure direction is positive
-        direction = (direction + 360.0) % 360.0;
-
-        return directionDictionary.First(entry => direction < entry.Key).Value;
+        return GeoCalculator.GetDirection(
+            userPosition.Coordinates.Latitude,
+            userPosition.Coordinates.Longitude,
+            reportPosition.Coordinates.Latitude,
+            reportPosition.Coordinates.Longitude);
     }
 }
