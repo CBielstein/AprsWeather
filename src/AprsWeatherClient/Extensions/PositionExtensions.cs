@@ -58,9 +58,15 @@ public static class PositionExtensions
             return null;
         }
 
-        var direction = Math.Atan2(
+        var directionRadians = Math.Atan2(
             reportPosition.Coordinates.Latitude - userPosition.Coordinates.Latitude,
             reportPosition.Coordinates.Longitude - userPosition.Coordinates.Longitude);
+
+        // convert to degrees
+        var direction = directionRadians * 180.0 / Math.PI;
+
+        // Convert from unit circle (0 is along X) to compass (0 is north)
+        direction -= 90;
 
         // ensure direction is positive
         direction = (direction + 360.0) % 360.0;
