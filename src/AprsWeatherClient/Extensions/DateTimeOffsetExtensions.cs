@@ -1,10 +1,10 @@
 namespace AprsWeatherClient.Extensions;
 
-public static class DateTimeExtensions
+public static class DateTimeOffsetExtensions
 {
-    public static int MinutesSince(this DateTime dt)
+    public static int MinutesSince(this DateTimeOffset dt)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var diff = now.Subtract(dt.ToUniversalTime());
         return (int)Math.Round(diff.Duration().TotalMinutes);
     }
