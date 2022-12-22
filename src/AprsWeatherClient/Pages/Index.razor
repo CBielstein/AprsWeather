@@ -8,7 +8,7 @@
 
 <PageTitle>APRS Weather</PageTitle>
 
-<h1>Current Seattle Weather</h1>
+<h1>Current Washington State Weather</h1>
 
 <div>
     <a>Gridsquare: </a>
@@ -20,7 +20,7 @@
 {
     <p><em>Input location...</em></p>
 }
-else if (reports?.Any() != true)
+else if (report == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -34,7 +34,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @if (reports.First().Packet.InfoField is WeatherInfo wi)
+            @if (report.Packet.InfoField is WeatherInfo wi)
             {
                 <tr>
                     <td>Temp (F)</td>
@@ -48,7 +48,7 @@ else
 
                 <tr>
                     <td>Minutes Ago</td>
-                    <td>@reports.First().ReceivedTime.MinutesSince() minutes ago</td>
+                    <td>@report.ReceivedTime.MinutesSince() minutes ago</td>
                 </tr>
 
                 <tr>
@@ -58,7 +58,7 @@ else
 
                 <tr>
                     <td>Reported By</td>
-                    <td>@reports.First().Packet.Sender</td>
+                    <td>@report.Packet.Sender</td>
                 </tr>
             }
         </tbody>
@@ -66,7 +66,7 @@ else
 }
 
 @code {
-    private IEnumerable<WeatherReport>? reports;
+    private WeatherReport? report;
     private HttpClient client = new HttpClient();
     private string? apiAddress;
     private string? userGridsquare;
@@ -86,9 +86,7 @@ else
 
         userPosition = new Position();
         userPosition.DecodeMaidenhead(userGridsquare);
-        var received = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=1");
-
-        // Order by Gridsquare
-        reports = received?.OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.EncodeGridsquare(6, false));
+        var response = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=1");
+        report = response?.SingleOrDefault();
     }
 }
