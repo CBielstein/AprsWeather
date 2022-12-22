@@ -89,4 +89,9 @@ else
         var response = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=1");
         report = response?.SingleOrDefault();
     }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateReports();
+    }
 }

@@ -73,20 +73,29 @@ public class AprsIsReceiver: IHostedService
 
         client = new AprsIsClient(clientLogger);
 
-        client.ReceivedPacket += StorePacket;
+        client.ReceivedTcpMessage += StoreReport;
         client.ChangedState += CreateConnection;
 
         receiveTask = client.Receive(callsign, password, server, filter);
     }
 
-    private void StorePacket(Packet p)
+    private void StoreReport(string report)
     {
-        if (p.InfoField is WeatherInfo)
+        try
         {
-            reports[p.Sender] = new WeatherReport()
+            var p = new Packet(report);
+
+            if (p.InfoField is WeatherInfo)
             {
-                Packet = p,
-            };
+                reports[p.Sender] = new WeatherReport()
+                {
+                    Report = report,
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to decode received report: {report}", report);
         }
     }
 }

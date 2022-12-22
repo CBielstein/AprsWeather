@@ -60,7 +60,7 @@ public class WeatherReportsControllerTests
         Assert.Equal(2, response.Count());
 
         // Assert all reports are present
-        var reports = response.Select(r => r.Packet.Encode());
+        var reports = response.Select(r => r.Report);
         Assert.Contains(packet1, reports);
         Assert.Contains(packet2, reports);
 
@@ -212,7 +212,7 @@ public class WeatherReportsControllerTests
                     packet.Sender,
                     new WeatherReport()
                     {
-                        Packet = packet,
+                        Report = report,
                     });
             }
         }
