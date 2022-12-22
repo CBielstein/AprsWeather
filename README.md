@@ -19,3 +19,10 @@ It has full continuous deployment for any code pushed/merged to `main`.
 
 To bootstrap the deployment, use the [doctl](https://docs.digitalocean.com/reference/doctl/) command line to deploy the application.
 Once deployed, take the application ID and save it as a GitHub Actions secret so it can be used for future updates and deployments.
+
+## APRS Reports and Gridsquare Locations
+
+Good resources for finding and viewing APRS reports and gridsquare locations (good for debugging):
+
+* [Google Maps APRS (APRS.fi)](https://aprs.fi)
+* [Amateur Radio Ham Radio Maidenhead Grid Square Locator Map](https://www.levinecentral.com/ham/grid_square.php)

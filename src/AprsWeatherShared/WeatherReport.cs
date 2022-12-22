@@ -17,6 +17,12 @@ public class WeatherReport
     /// <summary>
     /// The report itself.
     /// </summary>
-    [JsonConverter(typeof(PacketJsonConverter))]
-    public Packet Packet { get; set; } = default!;
+    public string Report { get; set; } = default!;
+
+    /// <summary>
+    /// The decoded packet, if possible.
+    /// </summary>
+    [JsonIgnore]
+    public Packet Packet => decoded ??= new Packet(Report);
+    private Packet? decoded = null;
 }

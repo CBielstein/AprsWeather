@@ -9,13 +9,12 @@ public class AprsIsReceiver: IHostedService
     private readonly IDictionary<string, WeatherReport> reports;
     private readonly ILogger<AprsIsReceiver> logger;
     private readonly ILogger<AprsIsClient> clientLogger;
+    private readonly IConfiguration configuration;
 
     private Task? receiveTask;
     private AprsIsClient? client;
     private bool attemptReconnect = true;
 
-    // Return any packets (less non-position types) within 50 km of Seattle's Space Needle
-    private const string filter = "r/47.620157/-122.349643/50 -t/oimqstu";
     private readonly string callsign = Environment.GetEnvironmentVariable("APRS_IS_CALLSIGN")
         ?? throw new ArgumentException("APRS_IS_CALLSIGN environment variable must be set.");
     private const string password = "-1";
@@ -24,11 +23,13 @@ public class AprsIsReceiver: IHostedService
     public AprsIsReceiver(
         IDictionary<string, WeatherReport> reports,
         ILogger<AprsIsReceiver> logger,
-        ILogger<AprsIsClient> clientLogger)
+        ILogger<AprsIsClient> clientLogger,
+        IConfiguration configuration)
     {
         this.reports = reports;
         this.logger = logger;
         this.clientLogger = clientLogger;
+        this.configuration = configuration;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -67,24 +68,34 @@ public class AprsIsReceiver: IHostedService
             Thread.Sleep(15000);
         }
 
-        logger.LogInformation("Creating new {AprsIsClient}", nameof(AprsIsClient));
+        string filter = configuration["AprsIsServerFilter"];
+        logger.LogInformation("Creating new {AprsIsClient} with filter {filter}", nameof(AprsIsClient), filter);
 
         client = new AprsIsClient(clientLogger);
 
-        client.ReceivedPacket += StorePacket;
+        client.ReceivedTcpMessage += StoreReport;
         client.ChangedState += CreateConnection;
 
         receiveTask = client.Receive(callsign, password, server, filter);
     }
 
-    private void StorePacket(Packet p)
+    private void StoreReport(string report)
     {
-        if (p.InfoField is WeatherInfo)
+        try
         {
-            reports[p.Sender] = new WeatherReport()
+            var p = new Packet(report);
+
+            if (p.InfoField is WeatherInfo)
             {
-                Packet = p,
-            };
+                reports[p.Sender] = new WeatherReport()
+                {
+                    Report = report,
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to decode received report: {report}", report);
         }
     }
 }
