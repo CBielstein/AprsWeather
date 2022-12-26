@@ -4,7 +4,9 @@
 @using Microsoft.Extensions.Configuration
 @using AprsWeatherClient.Extensions
 @using System.Collections.Generic
+@using Darnton.Blazor.DeviceInterop.Geolocation
 @inject IConfiguration Configuration
+@inject IGeolocationService locationService
 
 <PageTitle>APRS Weather</PageTitle>
 
@@ -13,7 +15,10 @@
 <div>
     <a>Gridsquare: </a>
     <input id="userGridsquareBox" placeholder="CN87to" @bind="userGridsquare"/>
-    <button @onclick="UpdateReports">Get Weather!</button>
+    <button @onclick="AutoLocation">Find My Location</button>
+    <button @onclick="ManualLocation">Get Weather!</button>
+    <br/>
+    <a @bind="userMessage" />
 </div>
 
 @if (userGridsquare == null)
@@ -71,6 +76,7 @@ else
     private string? apiAddress;
     private string? userGridsquare;
     private Position? userPosition;
+    private string userMessage = string.Empty;
 
     private async Task UpdateReports()
     {
@@ -84,10 +90,42 @@ else
             apiAddress = Configuration["ServerAddress"];
         }
 
-        userPosition = new Position();
-        userPosition.DecodeMaidenhead(userGridsquare);
         var response = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=1");
         report = response?.SingleOrDefault();
+    }
+
+    private async Task ManualLocation()
+    {
+        if (string.IsNullOrWhiteSpace(userGridsquare))
+        {
+            return;
+        }
+
+        userPosition = new Position();
+        userPosition.DecodeMaidenhead(userGridsquare);
+
+        await UpdateReports();
+    }
+
+    private async Task AutoLocation()
+    {
+        GeolocationResult location;
+
+        try
+        {
+            location = await locationService.GetCurrentPosition();
+        }
+        catch (Exception ex)
+        {
+            userMessage = $"Unable to fetch user location: {ex.Message}";
+            return;
+        }
+
+        userPosition = new Position();
+        userPosition.Coordinates = new GeoCoordinatePortable.GeoCoordinate(location.Position.Coords.Latitude, location.Position.Coords.Longitude);
+        userGridsquare = userPosition.EncodeGridsquare(6, false);
+
+        await UpdateReports();
     }
 
     protected override async Task OnInitializedAsync()
