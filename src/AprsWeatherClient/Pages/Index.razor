@@ -113,19 +113,19 @@ else
     {
         userMessage = string.Empty;
 
-        try
-        {
-            GeolocationResult location = await locationService.GetCurrentPosition();
-            userPosition = new Position();
-            userPosition.Coordinates = new GeoCoordinatePortable.GeoCoordinate(location.Position.Coords.Latitude, location.Position.Coords.Longitude);
-            userGridsquare = userPosition.EncodeGridsquare(6, false);
+        GeolocationResult location = await locationService.GetCurrentPosition();
 
-            await UpdateReports();
-        }
-        catch (Exception ex)
+        if (!location.IsSuccess)
         {
-            userMessage = $"Unable to fetch user location: {ex.Message}";
+            userMessage = "Unable to retrieve user location.";
+            return;
         }
+
+        userPosition = new Position();
+        userPosition.Coordinates = new GeoCoordinatePortable.GeoCoordinate(location.Position.Coords.Latitude, location.Position.Coords.Longitude);
+        userGridsquare = userPosition.EncodeGridsquare(6, false);
+
+        await UpdateReports();
     }
 
     protected override async Task OnInitializedAsync()
