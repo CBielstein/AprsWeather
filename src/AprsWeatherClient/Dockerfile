@@ -19,6 +19,9 @@ RUN dotnet build AprsWeatherClient/AprsWeatherClient.csproj --configuration Rele
 # Publish
 RUN dotnet publish AprsWeatherClient/AprsWeatherClient.csproj --configuration Release --no-build --no-restore -o /app/publish
 
+# Rename Geolocation.js -> geolocation.js to support nginx casting file name to lower
+RUN mv /app/publish/wwwroot/_content/Darnton.Blazor.DeviceInterop/js/Geolocation.js /app/publish/wwwroot/_content/Darnton.Blazor.DeviceInterop/js/geolocation.js
+
 # Build final host image
 FROM nginx:1.21.6-alpine AS host
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
