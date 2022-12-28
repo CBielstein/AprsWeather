@@ -4,7 +4,6 @@
 @using Microsoft.Extensions.Configuration
 @using AprsWeatherClient.Extensions
 @using System.Collections.Generic
-@using System.Reflection
 @using Darnton.Blazor.DeviceInterop.Geolocation
 @inject IConfiguration Configuration
 @inject IGeolocationService locationService
@@ -42,10 +41,9 @@ else
         <tbody>
             @if (report.Packet.InfoField is WeatherInfo wi)
             {
-                foreach (var entry in propertyLabels)
+                @foreach ((string label, MeasurementDisplayMap displayMap) in propertyLabels)
                 {
-                    var label = entry.Key;
-                    var measurement = Convert.ChangeType(entry.Value.GetValue(wi), entry.Key.GetType());
+                    string? measurement = displayMap(wi);
                     if (measurement != null)
                     {
                         <tr>
@@ -82,23 +80,25 @@ else
     private Position? userPosition;
     private string userMessage = string.Empty;
 
+    private delegate string? MeasurementDisplayMap(WeatherInfo wi);
+
     /// <summary>
     /// Maps a property (of WeatherInfo) to the label to show in the UX.
     /// </summary>
     /// <returns></returns>
-    private Dictionary<string, PropertyInfo> propertyLabels = new Dictionary<string, PropertyInfo>()
+    private List<(string, MeasurementDisplayMap)> propertyLabels = new List<(string, MeasurementDisplayMap)>()
     {
-        { "Temp (F)", typeof(WeatherInfo).GetProperty("Temperature")! },
-        { "Rainfall Since Midnight (100ths of inch)", typeof(WeatherInfo).GetProperty("RainfallSinceMidnight")! },
-        { "Rainfall Last 24 Hours (100ths of inch)", typeof(WeatherInfo).GetProperty("Rainfall24Hour")! },
-        { "Rainfall Last 1 Hour (100ths of inch)", typeof(WeatherInfo).GetProperty("Rainfall1Hour")! },
-        { "Sustained Windspeed (MPH)", typeof(WeatherInfo).GetProperty("WindSpeed")! },
-        { "Wind Direction (Degrees)", typeof(WeatherInfo).GetProperty("WindDirection")! },
-        { "Humidity (percent)", typeof(WeatherInfo).GetProperty("Humidity")! },
-        { "Barometric Pressure (10ths of millibar)", typeof(WeatherInfo).GetProperty("BarometricPressure")! },
-        { "Luminosity (watts/m^2)", typeof(WeatherInfo).GetProperty("Luminosity")! },
-        { "Snow Last 24 Hours (inches)", typeof(WeatherInfo).GetProperty("Snow")! },
-        { "Station raw rain measurement", typeof(WeatherInfo).GetProperty("RainRaw")! },
+        ("Temperature", wi => wi.Temperature?.ToStringWithSuffix("F")),
+        ("Rainfall Since Midnight", wi => wi.RainfallSinceMidnight?.FromHundredths().ToStringWithSuffix("\"")),
+        ("24 Hour Rainfall", wi => wi.Rainfall24Hour?.FromHundredths().ToStringWithSuffix("\"")),
+        ("1 Hour Rainfall", wi => wi.Rainfall1Hour?.FromHundredths().ToStringWithSuffix("\"")),
+        ("Windspeed", wi => wi.WindSpeed?.ToStringWithSuffix(" MPH")),
+        ("Wind Direction", wi => wi?.WindDirection?.ToCardinalDirection()),
+        ("Wind Gust", wi => wi.WindGust?.ToStringWithSuffix(" MPH")),
+        ("Humidity", wi => wi.Humidity?.ToStringWithSuffix("%")),
+        ("Barometric Pressure", wi => wi.BarometricPressure?.FromTenths().ToStringWithSuffix(" mbar")),
+        ("24 Hour Snowfall", wi => wi.Snow?.ToStringWithSuffix("\"")),
+        ("Luminosity", wi => wi.Luminosity?.ToStringWithSuffix(" watts/m^2")),
     };
 
     private async Task UpdateReports()
