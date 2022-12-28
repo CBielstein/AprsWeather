@@ -52,7 +52,7 @@ public static class PositionExtensions
     /// Map of upper bound of degrees and the cardinal direction it represents.
     /// Referenced from http://snowfence.umn.edu/Components/winddirectionanddegrees.htm
     /// </summary>
-    private static List<(double, string)> directionBounds = new List<(double, string)>()
+    private static readonly List<(double, string)> directionBounds = new List<(double, string)>()
     {
         (11.25, "N"),
         (33.75, "NNE"),
