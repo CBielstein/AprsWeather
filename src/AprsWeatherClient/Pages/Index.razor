@@ -4,6 +4,7 @@
 @using Microsoft.Extensions.Configuration
 @using AprsWeatherClient.Extensions
 @using System.Collections.Generic
+@using System.Reflection
 @using Darnton.Blazor.DeviceInterop.Geolocation
 @inject IConfiguration Configuration
 @inject IGeolocationService locationService
@@ -41,15 +42,18 @@ else
         <tbody>
             @if (report.Packet.InfoField is WeatherInfo wi)
             {
-                <tr>
-                    <td>Temp (F)</td>
-                    <td>@wi.Temperature</td>
-                </tr>
-
-                <tr>
-                    <td>Rain Today</td>
-                    <td>@wi.RainfallSinceMidnight</td>
-                </tr>
+                foreach (var entry in propertyLabels)
+                {
+                    var label = entry.Key;
+                    var measurement = Convert.ChangeType(entry.Value.GetValue(wi), entry.Key.GetType());
+                    if (measurement != null)
+                    {
+                        <tr>
+                            <td>@label</td>
+                            <td>@measurement</td>
+                        </tr>
+                    }
+                }
 
                 <tr>
                     <td>Minutes Ago</td>
@@ -77,6 +81,25 @@ else
     private string? userGridsquare;
     private Position? userPosition;
     private string userMessage = string.Empty;
+
+    /// <summary>
+    /// Maps a property (of WeatherInfo) to the label to show in the UX.
+    /// </summary>
+    /// <returns></returns>
+    private Dictionary<string, PropertyInfo> propertyLabels = new Dictionary<string, PropertyInfo>()
+    {
+        { "Temp (F)", typeof(WeatherInfo).GetProperty("Temperature")! },
+        { "Rainfall Since Midnight (100ths of inch)", typeof(WeatherInfo).GetProperty("RainfallSinceMidnight")! },
+        { "Rainfall Last 24 Hours (100ths of inch)", typeof(WeatherInfo).GetProperty("Rainfall24Hour")! },
+        { "Rainfall Last 1 Hour (100ths of inch)", typeof(WeatherInfo).GetProperty("Rainfall1Hour")! },
+        { "Sustained Windspeed (MPH)", typeof(WeatherInfo).GetProperty("WindSpeed")! },
+        { "Wind Direction (Degrees)", typeof(WeatherInfo).GetProperty("WindDirection")! },
+        { "Humidity (percent)", typeof(WeatherInfo).GetProperty("Humidity")! },
+        { "Barometric Pressure (10ths of millibar)", typeof(WeatherInfo).GetProperty("BarometricPressure")! },
+        { "Luminosity (watts/m^2)", typeof(WeatherInfo).GetProperty("Luminosity")! },
+        { "Snow Last 24 Hours (inches)", typeof(WeatherInfo).GetProperty("Snow")! },
+        { "Station raw rain measurement", typeof(WeatherInfo).GetProperty("RainRaw")! },
+    };
 
     private async Task UpdateReports()
     {
