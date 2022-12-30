@@ -20,12 +20,11 @@
             placeholder="Gridsquare"
             @bind="userGridsquare"
             pattern=@GRIDSQUARE_REGEX
-            title="Maidenhead Gridsquare of lenth 4, 6, or 8"
+            title="Maidenhead Gridsquare of length 4, 6, or 8. e.g. `CN87to`"
         />
+        <input type="button" @onclick="AutoLocation" value="Find My Location"/>
         <input type="submit" @onclick="ManualLocation" value="Get Weather!"/>
     </form>
-    <button @onclick="AutoLocation">Find My Location</button>
-    <br/>
     <a>@userMessage</a>
 </div>
 
