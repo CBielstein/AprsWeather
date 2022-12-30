@@ -85,7 +85,7 @@ public class AprsIsReceiver: IHostedService
         {
             var p = new Packet(report);
 
-            if (p.InfoField is WeatherInfo)
+            if (ShouldIncludePacket(p))
             {
                 reports[p.Sender] = new WeatherReport()
                 {
@@ -97,5 +97,10 @@ public class AprsIsReceiver: IHostedService
         {
             logger.LogError(ex, "Failed to decode received report: {report}", report);
         }
+    }
+
+    public static bool ShouldIncludePacket(Packet packet)
+    {
+        return packet.InfoField is WeatherInfo;
     }
 }
