@@ -20,16 +20,6 @@ public class WeatherReportsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all <see cref="WeatherReport"/>s held by the server.
-    /// </summary>
-    /// <returns>A list of <see cref="WeatherReport"/>s</returns>
-    [HttpGet(Name = "GetAllWeatherReports")]
-    public IEnumerable<WeatherReport> All()
-    {
-        return reports.Values;
-    }
-
-    /// <summary>
     /// Gets <see cref="WeatherReport"/>s near a given location.
     /// </summary>
     /// <param name="location">Sorts by the proximity to a given location (specified as the centerpoint of a gridsquare).</param>
