@@ -24,6 +24,6 @@ public class AprsIsReceiverTests
     public void IncludeReport(string encodedPacket, bool expectedInclude)
     {
         var packet = new Packet(encodedPacket);
-        Assert.Equal(expectedInclude, AprsIsReceiver.ShouldIncludePacket(packet));
+        Assert.Equal(expectedInclude, AprsIsReceiver.ShouldStoreReport(packet));
     }
 }

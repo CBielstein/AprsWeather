@@ -73,33 +73,44 @@ public class AprsIsReceiver: IHostedService
 
         client = new AprsIsClient(clientLogger);
 
-        client.ReceivedTcpMessage += StoreReport;
+        client.ReceivedTcpMessage += ProcessReport;
         client.ChangedState += CreateConnection;
 
         receiveTask = client.Receive(callsign, password, server, filter);
     }
 
-    private void StoreReport(string report)
+    /// <summary>
+    /// Processes incoming <see cref="Packet"/> and stores any appropriate
+    /// <see cref="WeatherInfo"/> packets.
+    /// </summary>
+    /// <param name="report">The encoded string received from the server.</param>
+    private void ProcessReport(string encodedPacket)
     {
         try
         {
-            var p = new Packet(report);
+            var p = new Packet(encodedPacket);
 
-            if (ShouldIncludePacket(p))
+            if (ShouldStoreReport(p))
             {
                 reports[p.Sender] = new WeatherReport()
                 {
-                    Report = report,
+                    Report = encodedPacket,
                 };
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to decode received report: {report}", report);
+            logger.LogError(ex, "Failed to decode received packet: {encodedPacket}", encodedPacket);
         }
     }
 
-    public static bool ShouldIncludePacket(Packet packet)
+    /// <summary>
+    /// Determines if a <see cref="Packet"/> should be saved as a relevant
+    /// <see cref="WeatherReport"/>.
+    /// </summary>
+    /// <param name="packet">The <see cref="Packet"/> to check.</param>
+    /// <returns>True if the <see cref="Packet"/> should be saved as a <see cref="WeatherReport"/>.</returns>
+    public static bool ShouldStoreReport(Packet packet)
     {
         return packet.InfoField is WeatherInfo;
     }
