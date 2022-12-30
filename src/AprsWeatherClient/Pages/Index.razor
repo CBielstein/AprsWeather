@@ -41,7 +41,7 @@ else
         <tbody>
             @if (report.Packet.InfoField is WeatherInfo wi)
             {
-                @foreach ((string label, MeasurementDisplayMap displayMap) in propertyLabels)
+                @foreach ((string label, WeatherInfoHelpers.MeasurementDisplayMap displayMap) in WeatherInfoHelpers.PropertyLabels)
                 {
                     string? measurement = displayMap(wi);
                     if (measurement != null)
@@ -70,27 +70,6 @@ else
     private string? userGridsquare;
     private Position? userPosition;
     private string userMessage = string.Empty;
-
-    private delegate string? MeasurementDisplayMap(WeatherInfo wi);
-
-    /// <summary>
-    /// A list of labels and mapping functions for what to display in the UX
-    /// </summary>
-    /// <returns></returns>
-    private List<(string, MeasurementDisplayMap)> propertyLabels = new List<(string, MeasurementDisplayMap)>()
-    {
-        ("Temperature", wi => wi.Temperature?.ToStringWithSuffix("F")),
-        ("Rainfall Since Midnight", wi => wi.RainfallSinceMidnight?.FromHundredths().ToStringWithSuffix("\"")),
-        ("24 Hour Rainfall", wi => wi.Rainfall24Hour?.FromHundredths().ToStringWithSuffix("\"")),
-        ("1 Hour Rainfall", wi => wi.Rainfall1Hour?.FromHundredths().ToStringWithSuffix("\"")),
-        ("Windspeed", wi => wi.WindSpeed?.ToStringWithSuffix(" MPH")),
-        ("Wind Direction", wi => wi?.WindDirection?.ToCardinalDirection()),
-        ("Wind Gust", wi => wi.WindGust?.ToStringWithSuffix(" MPH")),
-        ("Humidity", wi => wi.Humidity?.ToStringWithSuffix("%")),
-        ("Barometric Pressure", wi => wi.BarometricPressure?.FromTenths().ToStringWithSuffix(" mbar")),
-        ("24 Hour Snowfall", wi => wi.Snow?.ToStringWithSuffix("\"")),
-        ("Luminosity", wi => wi.Luminosity?.ToStringWithSuffix(" watts/m^2")),
-    };
 
     private async Task UpdateReports()
     {

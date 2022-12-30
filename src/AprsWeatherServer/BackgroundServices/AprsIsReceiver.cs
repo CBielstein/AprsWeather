@@ -19,6 +19,7 @@ public class AprsIsReceiver: IHostedService
         ?? throw new ArgumentException("APRS_IS_CALLSIGN environment variable must be set.");
     private const string password = "-1";
     private const string server = "noam.aprs2.net";
+    private static readonly IEnumerable<WeatherInfoHelpers.MeasurementDisplayMap> MeasurementMaps = WeatherInfoHelpers.PropertyLabels.Select(pl => pl.Item2);
 
     public AprsIsReceiver(
         IDictionary<string, WeatherReport> reports,
@@ -73,29 +74,47 @@ public class AprsIsReceiver: IHostedService
 
         client = new AprsIsClient(clientLogger);
 
-        client.ReceivedTcpMessage += StoreReport;
+        client.ReceivedTcpMessage += ProcessReport;
         client.ChangedState += CreateConnection;
 
         receiveTask = client.Receive(callsign, password, server, filter);
     }
 
-    private void StoreReport(string report)
+    /// <summary>
+    /// Processes incoming <see cref="Packet"/> and stores any appropriate
+    /// <see cref="WeatherInfo"/> packets.
+    /// </summary>
+    /// <param name="report">The encoded string received from the server.</param>
+    private void ProcessReport(string encodedPacket)
     {
         try
         {
-            var p = new Packet(report);
+            var p = new Packet(encodedPacket);
 
-            if (p.InfoField is WeatherInfo)
+            if (ShouldStoreReport(p))
             {
                 reports[p.Sender] = new WeatherReport()
                 {
-                    Report = report,
+                    Report = encodedPacket,
                 };
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to decode received report: {report}", report);
+            logger.LogError(ex, "Failed to decode received packet: {encodedPacket}", encodedPacket);
         }
+    }
+
+    /// <summary>
+    /// Determines if a <see cref="Packet"/> should be saved as a relevant
+    /// <see cref="WeatherReport"/> by finding if there are any values we
+    /// would display in the client.
+    /// </summary>
+    /// <param name="packet">The <see cref="Packet"/> to check.</param>
+    /// <returns>True if the <see cref="Packet"/> should be saved as a <see cref="WeatherReport"/>.</returns>
+    public static bool ShouldStoreReport(Packet packet)
+    {
+        return (packet.InfoField is WeatherInfo wi) &&
+                MeasurementMaps.Any(displayMap => displayMap(wi) != null);
     }
 }
