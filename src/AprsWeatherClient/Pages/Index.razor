@@ -4,6 +4,7 @@
 @using Microsoft.Extensions.Configuration
 @using AprsWeatherClient.Extensions
 @using System.Collections.Generic
+@using System.Text.RegularExpressions
 @using Darnton.Blazor.DeviceInterop.Geolocation
 @inject IConfiguration Configuration
 @inject IGeolocationService locationService
@@ -13,11 +14,17 @@
 <h1>Current Weather</h1>
 
 <div>
-    <a>Gridsquare: </a>
-    <input id="userGridsquareBox" placeholder="CN87to" @bind="userGridsquare"/>
-    <button @onclick="AutoLocation">Find My Location</button>
-    <button @onclick="ManualLocation">Get Weather!</button>
-    <br/>
+    <form onsubmit="return false;">
+        <input
+            id="userGridsquareBox"
+            placeholder="Gridsquare"
+            @bind="userGridsquare"
+            pattern=@GRIDSQUARE_REGEX
+            title="Maidenhead Gridsquare of length 4, 6, or 8. e.g. `CN87to`"
+        />
+        <input type="button" @onclick="AutoLocation" value="Find My Location"/>
+        <input type="submit" @onclick="ManualLocation" value="Get Weather!"/>
+    </form>
     <a>@userMessage</a>
 </div>
 
@@ -71,6 +78,11 @@ else
     private Position? userPosition;
     private string userMessage = string.Empty;
 
+    /// <summary>
+    /// Case-insensitive gridsquare of length 4, 6, or 8
+    /// </summary>
+    private const string GRIDSQUARE_REGEX = @"^[a-zA-Z]{2}[0-9]{2}(([a-zA-Z]{2})|([a-zA-Z]{2}[0-9]{2}))?$";
+
     private async Task UpdateReports()
     {
         if (string.IsNullOrWhiteSpace(userGridsquare))
@@ -92,6 +104,11 @@ else
         userMessage = string.Empty;
 
         if (string.IsNullOrWhiteSpace(userGridsquare))
+        {
+            return;
+        }
+
+        if (!Regex.IsMatch(userGridsquare, GRIDSQUARE_REGEX))
         {
             return;
         }
