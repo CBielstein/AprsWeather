@@ -106,12 +106,16 @@ public class AprsIsReceiver: IHostedService
 
     /// <summary>
     /// Determines if a <see cref="Packet"/> should be saved as a relevant
-    /// <see cref="WeatherReport"/>.
+    /// <see cref="WeatherReport"/> by finding if there are any values we
+    /// would display in the client.
     /// </summary>
     /// <param name="packet">The <see cref="Packet"/> to check.</param>
     /// <returns>True if the <see cref="Packet"/> should be saved as a <see cref="WeatherReport"/>.</returns>
     public static bool ShouldStoreReport(Packet packet)
     {
-        return packet.InfoField is WeatherInfo;
+        return (packet.InfoField is WeatherInfo wi) &&
+                WeatherInfoHelpers.PropertyLabels
+                    .Select(pl => pl.Item2)
+                    .Any(displayMap => displayMap(wi) != null);
     }
 }
