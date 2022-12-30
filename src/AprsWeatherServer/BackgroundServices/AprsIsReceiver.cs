@@ -19,6 +19,7 @@ public class AprsIsReceiver: IHostedService
         ?? throw new ArgumentException("APRS_IS_CALLSIGN environment variable must be set.");
     private const string password = "-1";
     private const string server = "noam.aprs2.net";
+    private static readonly IEnumerable<WeatherInfoHelpers.MeasurementDisplayMap> MeasurementMaps = WeatherInfoHelpers.PropertyLabels.Select(pl => pl.Item2);
 
     public AprsIsReceiver(
         IDictionary<string, WeatherReport> reports,
@@ -114,8 +115,6 @@ public class AprsIsReceiver: IHostedService
     public static bool ShouldStoreReport(Packet packet)
     {
         return (packet.InfoField is WeatherInfo wi) &&
-                WeatherInfoHelpers.PropertyLabels
-                    .Select(pl => pl.Item2)
-                    .Any(displayMap => displayMap(wi) != null);
+                MeasurementMaps.Any(displayMap => displayMap(wi) != null);
     }
 }
