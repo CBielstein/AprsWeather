@@ -62,7 +62,13 @@ else
 
                 <div>
                     <i>
-                        Reported <b>@report.ReceivedTime.MinutesSince() minutes ago</b> from about <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b> by <b>@report.Packet.Sender</b>.
+                        Reported <b>@report.ReceivedTime.MinutesSince() minutes ago</b> from about
+                        <a
+                            href=@($"https://www.openstreetmap.org/?mlat={wi.Position.Coordinates.Latitude}&mlon={wi.Position.Coordinates.Longitude}")
+                            target="_blank">
+                            <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b>
+                        </a>
+                        by <b>@report.Packet.Sender</b>.
                     </i>
                 </div>
             }
