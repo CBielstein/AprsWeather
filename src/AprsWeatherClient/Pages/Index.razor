@@ -25,8 +25,8 @@
         <input type="button" @onclick="AutoLocation" value="Find My Location"/>
         <input type="submit" @onclick="ManualLocation" value="Get Weather!"/>
     </form>
-    <label for="places">Or choose a common place:</label>
     <select id="places" @onchange="SetCommonLocation">
+        <option value="none" selected hidden>Or choose a common place:</option>
         <option value="CN87">Seattle, USA</option>
         <option value="PM95">Tokyo, Japan</option>
         <option value="JF96">Cape Town, South Africa</option>
