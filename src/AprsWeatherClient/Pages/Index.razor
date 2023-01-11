@@ -25,8 +25,8 @@
         <input type="button" @onclick="AutoLocation" value="Find My Location"/>
         <input type="submit" @onclick="ManualLocation" value="Get Weather!"/>
     </form>
-    <select id="places" @onchange="SetCommonLocation">
-        <option value="none" selected hidden>Or choose a common place:</option>
+    <select id="places" @onchange="SetExampleLocation">
+        <option value="none" selected hidden>Example Locations</option>
         <option value="CN87">Seattle, USA</option>
         <option value="PM95">Tokyo, Japan</option>
         <option value="JF96">Cape Town, South Africa</option>
@@ -152,7 +152,7 @@ else
         await UpdateReports();
     }
 
-    private async Task SetCommonLocation(ChangeEventArgs args)
+    private async Task SetExampleLocation(ChangeEventArgs args)
     {
         userGridsquare = args.Value as string ?? throw new Exception("HTML select object did not have value");
         await ManualLocation();
