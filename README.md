@@ -2,6 +2,8 @@
 
 Weather maps backed by data from the Automatic Position Reporting System (APRS).
 
+Deployed at: [hamwx.bielstein.dev](https://hamwx.bielstein.dev)
+
 ## Running Locally
 
 Before running, you'll have to set a value for the `APRS_IS_CALLSIGN` environment variable.
