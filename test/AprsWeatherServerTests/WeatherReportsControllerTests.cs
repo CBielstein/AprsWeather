@@ -141,19 +141,58 @@ public class WeatherReportsControllerTests
     [InlineData(30)]
     public async Task TestCount(int count)
     {
-        var reports = new string[count];
-
-        for (int i = 0; i < count; ++i)
-        {
-            reports[i] = $"N0CALL-{i}>WIDE2-2:/092345z4903.50N/07201.75W_180/010 Testing WX packet #{i}.";
-        }
-
-        SetServerReports(reports);
-
+        CreateServerReports(count);
         var response = await client.GetAsync("/WeatherReports/Count");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var serverCount = await response.Content.ReadAsStringAsync();
         Assert.Equal(count, int.Parse(serverCount));
+    }
+
+    /// <summary>
+    /// Verifies that the skip API parameter works as expected.
+    /// </summary>
+    /// <param name="skip">The number of reports to skip.</param>
+    /// <param name="limit">The number of reports to return.</param>
+    /// <param name="expectedCount">The expected number of reports returned.</param>
+    /// <returns></returns>
+    [Theory]
+    [InlineData(0, 1, 1)]
+    [InlineData(1, 1, 1)]
+    [InlineData(3, 2, 2)]
+    [InlineData(5, 1, 0)]
+    public async Task TestSkip(int skip, int limit, int expectedCount)
+    {
+        var createdReports = CreateServerReports(5);
+
+        var args = new Dictionary<string, string?>();
+        args.Add("skip", skip.ToString());
+        args.Add("limit", limit.ToString());
+        args.Add("location", "JJ00aa");
+
+        var responseReports = await GetReports(reportsNearEndpoint, args: args);
+        Assert.NotNull(responseReports);
+        Assert.Equal(expectedCount, responseReports!.Count());
+
+        for (var i = 0; i < expectedCount; ++i)
+        {
+            Assert.Equal(createdReports.ElementAt(skip + i).Report, responseReports!.ElementAt(i).Report);
+        }
+    }
+
+    /// <summary>
+    /// Generates and sets the given number of weather reports on the server.
+    /// </summary>
+    /// <param name="count">The number of weather reports to generate</param>
+    private IEnumerable<WeatherReport> CreateServerReports(int count)
+    {
+        var reports = new string[count];
+
+        for (int i = 0; i < count; ++i)
+        {
+            reports[i] = $"N0CALL-{i}>WIDE2-2:/092345z4903.50N/07201.75W_180/010 Testing WX packet #{i}";
+        }
+
+        return SetServerReports(reports);
     }
 
     /// <summary>
@@ -162,7 +201,7 @@ public class WeatherReportsControllerTests
     /// have no reports.
     /// </summary>
     /// <param name="newReports">Reports to set in the test server. None, if not provided.</param>
-    private void SetServerReports(IEnumerable<string>? newReports = null)
+    private IEnumerable<WeatherReport> SetServerReports(IEnumerable<string>? newReports = null)
     {
         serverReports.Clear();
 
@@ -180,6 +219,8 @@ public class WeatherReportsControllerTests
                     });
             }
         }
+
+        return serverReports.Values;
     }
 
     /// <summary>
