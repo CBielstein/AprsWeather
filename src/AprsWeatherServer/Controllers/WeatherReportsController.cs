@@ -24,11 +24,13 @@ public class WeatherReportsController : ControllerBase
     /// </summary>
     /// <param name="location">Sorts by the proximity to a given location (specified as the centerpoint of a gridsquare).</param>
     /// <param name="limit">Limits number of reports to the number given, default is 1.</param>
+    /// <param name="skip">Skips ordered reports, used for paging. Default is 0.</param>
     /// <returns><see cref="WeatherReport"/>s filtered and limited as requested.</returns>
     [HttpGet(Name = "GetWeatherReportsNearLocation")]
     public IEnumerable<WeatherReport> Near(
         [FromQuery] string location,
-        [FromQuery] int limit = 1)
+        [FromQuery] int limit = 1,
+        [FromQuery] int skip = 0)
     {
         if (string.IsNullOrEmpty(location))
         {
@@ -44,6 +46,7 @@ public class WeatherReportsController : ControllerBase
 
         return reports.Values
             .OrderBy(r => (r.Packet.InfoField as WeatherInfo)?.Position.Coordinates.GetDistanceTo(locationPosition.Coordinates))
+            .Skip(skip)
             .Take(limit);
     }
 
