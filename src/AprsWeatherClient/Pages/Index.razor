@@ -40,7 +40,7 @@
 {
     <p><em>Input location...</em></p>
 }
-else if (report == null)
+else if (currentReport == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -54,7 +54,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @if (report.Packet.InfoField is WeatherInfo wi)
+            @if (currentReport.Packet.InfoField is WeatherInfo wi)
             {
                 @foreach ((string label, WeatherInfoHelpers.MeasurementDisplayMap displayMap) in WeatherInfoHelpers.PropertyLabels)
                 {
@@ -70,22 +70,28 @@ else
 
                 <div>
                     <i>
-                        Reported <b>@report.ReceivedTime.MinutesSince() minutes ago</b> from about
+                        Reported <b>@currentReport.ReceivedTime.MinutesSince() minutes ago</b> from about
                         <a
                             href=@($"https://www.openstreetmap.org/?mlat={wi.Position.Coordinates.Latitude}&mlon={wi.Position.Coordinates.Longitude}")
                             target="_blank">
                             <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b>
                         </a>
-                        by <b>@report.Packet.Sender</b>.
+                        by <b>@currentReport.Packet.Sender</b>.
                     </i>
                 </div>
             }
         </tbody>
     </table>
+    <span>
+        <button type="button" @onclick="PreviousReport" disabled=@(reportIndex == 0)>Closer Station</button>
+        <button type="button" @onclick="NextReport">Further Station</button>
+    </span>
 }
 
 @code {
-    private WeatherReport? report;
+    private IList<WeatherReport> reports = new List<WeatherReport>();
+    private WeatherReport? currentReport = null;
+    private int reportIndex = 0;
     private HttpClient client = new HttpClient();
     private string? apiAddress;
     private string? userGridsquare;
@@ -97,7 +103,7 @@ else
     /// </summary>
     private const string GRIDSQUARE_REGEX = @"^[a-zA-Z]{2}[0-9]{2}(([a-zA-Z]{2})|([a-zA-Z]{2}[0-9]{2}))?$";
 
-    private async Task UpdateReports()
+    private async Task LoadNewReports()
     {
         if (string.IsNullOrWhiteSpace(userGridsquare))
         {
@@ -109,8 +115,8 @@ else
             apiAddress = Configuration["ServerAddress"];
         }
 
-        var response = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=1");
-        report = response?.SingleOrDefault();
+        reports = await GetReports(0);
+        currentReport = reports.FirstOrDefault();
     }
 
     private async Task ManualLocation()
@@ -130,7 +136,7 @@ else
         userPosition = new Position();
         userPosition.DecodeMaidenhead(userGridsquare);
 
-        await UpdateReports();
+        await LoadNewReports();
     }
 
     private async Task AutoLocation()
@@ -149,7 +155,7 @@ else
         userPosition.Coordinates = new GeoCoordinatePortable.GeoCoordinate(location.Position.Coords.Latitude, location.Position.Coords.Longitude);
         userGridsquare = userPosition.EncodeGridsquare(6, false);
 
-        await UpdateReports();
+        await LoadNewReports();
     }
 
     private async Task SetExampleLocation(ChangeEventArgs args)
@@ -158,8 +164,41 @@ else
         await ManualLocation();
     }
 
+    private void PreviousReport()
+    {
+        if (reportIndex > 0)
+        {
+            currentReport = reports.Count > 0 ? reports[--reportIndex] : null;
+        }
+    }
+
+    private async Task NextReport()
+    {
+        if (reportIndex + 1 >= reports.Count)
+        {
+            var newReports = await GetReports(reports.Count);
+            if (newReports.Count == 0)
+            {
+                userMessage = "No more reports on the server.";
+            }
+
+            reports = reports.Concat(newReports.ExceptBy(reports.Select(r => r.Packet.Sender), r => r.Packet.Sender)).ToList();
+        }
+
+        if (reports.Count > reportIndex + 1)
+        {
+            currentReport = reports[++reportIndex];
+        }
+    }
+
+    private async Task<IList<WeatherReport>> GetReports(int skip = 0)
+    {
+        var reports = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=3&skip={skip}");
+        return reports?.ToList() ?? new List<WeatherReport>();
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        await UpdateReports();
+        await LoadNewReports();
     }
 }
