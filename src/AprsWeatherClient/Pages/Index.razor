@@ -191,6 +191,9 @@ else
             reports = reports.Concat(newReports.ExceptBy(reports.Select(r => r.Packet.Sender), r => r.Packet.Sender)).ToList();
         }
 
+        // Guarded by a condition as the above concat(.exceptby) might not result in more `reports` if the new
+        // reports were previously seen. This could happen if new reports are added closer than the current pagination point.
+        // Might be good to fix in the future. Unlikely, but could be resolved by a page refresh.
         if (reports.Count > reportIndex + 1)
         {
             currentReport = reports[++reportIndex];
