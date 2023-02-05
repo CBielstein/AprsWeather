@@ -164,6 +164,9 @@ else
         await ManualLocation();
     }
 
+    /// <summary>
+    /// Pages through reports: previous closer report (unless already on closest)
+    /// </summary>
     private void PreviousReport()
     {
         if (reportIndex > 0)
@@ -172,6 +175,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Pages through reports: next further report. Fetches new reports from the server if necessary.
+    /// </summary>
     private async Task NextReport()
     {
         if (reportIndex + 1 >= reports.Count)
@@ -191,6 +197,11 @@ else
         }
     }
 
+    /// <summary>
+    /// Fetches reports from the server, skipping the provided number of reports.
+    /// </summary>
+    /// <param name="skip">Number of reports to skip for pagination</param>
+    /// <returns>A list of <see cref="WeatherReport"/> from the server response</returns>
     private async Task<IList<WeatherReport>> GetReports(int skip = 0)
     {
         var reports = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=3&skip={skip}");
