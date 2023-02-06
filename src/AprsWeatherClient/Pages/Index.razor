@@ -1,12 +1,8 @@
 ﻿@page "/"
-@using AprsSharp.Parsers.Aprs
 @using AprsWeather.Shared
+@using AprsSharp.Parsers.Aprs
 @using AprsWeatherClient.Extensions
 @using AprsWeatherClient.Models
-@using System.Text.RegularExpressions
-@using Darnton.Blazor.DeviceInterop.Geolocation
-@inject IGeolocationService locationService
-@inject ReportList reportList
 
 <PageTitle>APRS Weather</PageTitle>
 
@@ -39,7 +35,7 @@
 {
     <p><em>Input location...</em></p>
 }
-else if (reportList.CurrentReport == null)
+else if (ReportList.CurrentReport == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -53,7 +49,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @if (reportList.CurrentReport.Packet.InfoField is WeatherInfo wi)
+            @if (ReportList.CurrentReport.Packet.InfoField is WeatherInfo wi)
             {
                 @foreach ((string label, WeatherInfoHelpers.MeasurementDisplayMap displayMap) in WeatherInfoHelpers.PropertyLabels)
                 {
@@ -69,106 +65,20 @@ else
 
                 <div>
                     <i>
-                        Reported <b>@reportList.CurrentReport.ReceivedTime.MinutesSince() minutes ago</b> from about
+                        Reported <b>@ReportList.CurrentReport.ReceivedTime.MinutesSince() minutes ago</b> from about
                         <a
                             href=@($"https://www.openstreetmap.org/?mlat={wi.Position.Coordinates.Latitude}&mlon={wi.Position.Coordinates.Longitude}")
                             target="_blank">
                             <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b>
                         </a>
-                        by <b>@reportList.CurrentReport.Packet.Sender</b>.
+                        by <b>@ReportList.CurrentReport.Packet.Sender</b>.
                     </i>
                 </div>
             }
         </tbody>
     </table>
     <span>
-        <button type="button" @onclick="reportList.Previous" disabled=@(!reportList.HasPrevious)>Closer Station</button>
-        <button type="button" @onclick="reportList.Next">Further Station</button>
+        <button type="button" @onclick="ReportList.Previous" disabled=@(!ReportList.HasPrevious)>Closer Station</button>
+        <button type="button" @onclick="ReportList.Next">Further Station</button>
     </span>
-}
-
-@code {
-
-    private string? userGridsquare;
-    private Position? userPosition;
-    private string userMessage = string.Empty;
-
-    /// <summary>
-    /// Case-insensitive gridsquare of length 4, 6, or 8
-    /// </summary>
-    private const string GRIDSQUARE_REGEX = @"^[a-zA-Z]{2}[0-9]{2}(([a-zA-Z]{2})|([a-zA-Z]{2}[0-9]{2}))?$";
-
-    /// <summary>
-    /// Sets the location using a value from the examples dropdown.
-    /// </summary>
-    /// <param name="args">Event change args</param>
-    /// <returns>The asynchronous task</returns>
-    private Task SetExampleLocation(ChangeEventArgs args)
-    {
-        userGridsquare = args.Value as string ?? throw new Exception("HTML select object did not have value");
-        return ManualLocation();
-    }
-
-    /// <summary>
-    /// Sets the location using a manual entry value.
-    /// </summary>
-    /// <returns>The asynchronous task</returns>
-    private Task ManualLocation()
-    {
-        if (!Regex.IsMatch(userGridsquare ?? string.Empty, GRIDSQUARE_REGEX))
-        {
-            return Task.CompletedTask;
-        }
-
-        userPosition = new Position();
-
-        // Null checked above in the regex match.
-        userPosition.DecodeMaidenhead(userGridsquare!);
-
-        return LoadNewReports();
-    }
-
-    /// <summary>
-    /// Sets the location using the geolocation API.
-    /// </summary>
-    /// <returns>The asynchronous task</returns>
-    private async Task AutoLocation()
-    {
-        GeolocationResult location = await locationService.GetCurrentPosition();
-
-        if (!location.IsSuccess)
-        {
-            userMessage = "Unable to retrieve user location.";
-            return;
-        }
-
-        userPosition = new Position();
-        userPosition.Coordinates = new GeoCoordinatePortable.GeoCoordinate(location.Position.Coords.Latitude, location.Position.Coords.Longitude);
-        userGridsquare = userPosition.EncodeGridsquare(6, false);
-
-        await LoadNewReports();
-    }
-
-    /// <summary>
-    /// Loads new reports using the current value of <see cref="userGridsquare"/>
-    /// </summary>
-    /// <returns>The asynchronous task</returns>
-    private Task LoadNewReports()
-    {
-        if (!Regex.IsMatch(userGridsquare ?? string.Empty, GRIDSQUARE_REGEX))
-        {
-            return Task.CompletedTask;
-        }
-
-        userMessage = string.Empty;
-
-        // Null checked above in the regex match.
-        return reportList.SetLocation(userGridsquare!);
-    }
-
-    /// <inheritdoc/>
-    protected override Task OnInitializedAsync()
-    {
-        return LoadNewReports();
-    }
 }
