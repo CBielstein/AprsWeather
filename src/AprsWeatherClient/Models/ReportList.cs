@@ -92,7 +92,7 @@ public class ReportList
         }
 
         // Guarded by a condition as the above concat(.exceptby) might not result in more `reports` if the new
-        // reports were previously seen. This could happen if new reports are added closer than the current pagination point.
+        // reports were previously seen. This could happen if new reports are received closer than the current pagination point.
         // Might be good to fix in the future. Unlikely, but could be resolved by a page refresh.
         if (reports.Count > reportIndex + 1)
         {
