@@ -110,7 +110,7 @@ public class ReportList
     /// <returns>A list of <see cref="WeatherReport"/> from the server response</returns>
     private async Task<IList<WeatherReport>> GetReports(int skip = 0)
     {
-        var reports = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"/WeatherReports/Near?location={gridsquare}&limit=3&skip={skip}");
+        var reports = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"WeatherReports/Near?location={gridsquare}&limit=3&skip={skip}");
         return reports?.ToList() ?? new List<WeatherReport>();
     }
 }
