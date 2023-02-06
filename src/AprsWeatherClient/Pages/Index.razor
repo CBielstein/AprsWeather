@@ -1,13 +1,12 @@
 ﻿@page "/"
 @using AprsSharp.Parsers.Aprs
 @using AprsWeather.Shared
-@using Microsoft.Extensions.Configuration
 @using AprsWeatherClient.Extensions
-@using System.Collections.Generic
+@using AprsWeatherClient.Models
 @using System.Text.RegularExpressions
 @using Darnton.Blazor.DeviceInterop.Geolocation
-@inject IConfiguration Configuration
 @inject IGeolocationService locationService
+@inject ReportList reportList
 
 <PageTitle>APRS Weather</PageTitle>
 
@@ -40,7 +39,7 @@
 {
     <p><em>Input location...</em></p>
 }
-else if (currentReport == null)
+else if (reportList.CurrentReport == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -54,7 +53,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @if (currentReport.Packet.InfoField is WeatherInfo wi)
+            @if (reportList.CurrentReport.Packet.InfoField is WeatherInfo wi)
             {
                 @foreach ((string label, WeatherInfoHelpers.MeasurementDisplayMap displayMap) in WeatherInfoHelpers.PropertyLabels)
                 {
@@ -70,30 +69,26 @@ else
 
                 <div>
                     <i>
-                        Reported <b>@currentReport.ReceivedTime.MinutesSince() minutes ago</b> from about
+                        Reported <b>@reportList.CurrentReport.ReceivedTime.MinutesSince() minutes ago</b> from about
                         <a
                             href=@($"https://www.openstreetmap.org/?mlat={wi.Position.Coordinates.Latitude}&mlon={wi.Position.Coordinates.Longitude}")
                             target="_blank">
                             <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b>
                         </a>
-                        by <b>@currentReport.Packet.Sender</b>.
+                        by <b>@reportList.CurrentReport.Packet.Sender</b>.
                     </i>
                 </div>
             }
         </tbody>
     </table>
     <span>
-        <button type="button" @onclick="PreviousReport" disabled=@(reportIndex == 0)>Closer Station</button>
-        <button type="button" @onclick="NextReport">Further Station</button>
+        <button type="button" @onclick="reportList.Previous" disabled=@(!reportList.HasPrevious)>Closer Station</button>
+        <button type="button" @onclick="reportList.Next">Further Station</button>
     </span>
 }
 
 @code {
-    private IList<WeatherReport> reports = new List<WeatherReport>();
-    private WeatherReport? currentReport = null;
-    private int reportIndex = 0;
-    private HttpClient client = new HttpClient();
-    private string? apiAddress;
+
     private string? userGridsquare;
     private Position? userPosition;
     private string userMessage = string.Empty;
@@ -103,46 +98,42 @@ else
     /// </summary>
     private const string GRIDSQUARE_REGEX = @"^[a-zA-Z]{2}[0-9]{2}(([a-zA-Z]{2})|([a-zA-Z]{2}[0-9]{2}))?$";
 
-    private async Task LoadNewReports()
+    /// <summary>
+    /// Sets the location using a value from the examples dropdown.
+    /// </summary>
+    /// <param name="args">Event change args</param>
+    /// <returns>The asynchronous task</returns>
+    private Task SetExampleLocation(ChangeEventArgs args)
     {
-        if (string.IsNullOrWhiteSpace(userGridsquare))
-        {
-            return;
-        }
-
-        if (apiAddress == null)
-        {
-            apiAddress = Configuration["ServerAddress"];
-        }
-
-        reports = await GetReports(0);
-        currentReport = reports.FirstOrDefault();
+        userGridsquare = args.Value as string ?? throw new Exception("HTML select object did not have value");
+        return ManualLocation();
     }
 
-    private async Task ManualLocation()
+    /// <summary>
+    /// Sets the location using a manual entry value.
+    /// </summary>
+    /// <returns>The asynchronous task</returns>
+    private Task ManualLocation()
     {
-        userMessage = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(userGridsquare))
+        if (!Regex.IsMatch(userGridsquare ?? string.Empty, GRIDSQUARE_REGEX))
         {
-            return;
-        }
-
-        if (!Regex.IsMatch(userGridsquare, GRIDSQUARE_REGEX))
-        {
-            return;
+            return Task.CompletedTask;
         }
 
         userPosition = new Position();
-        userPosition.DecodeMaidenhead(userGridsquare);
 
-        await LoadNewReports();
+        // Null checked above in the regex match.
+        userPosition.DecodeMaidenhead(userGridsquare!);
+
+        return LoadNewReports();
     }
 
+    /// <summary>
+    /// Sets the location using the geolocation API.
+    /// </summary>
+    /// <returns>The asynchronous task</returns>
     private async Task AutoLocation()
     {
-        userMessage = string.Empty;
-
         GeolocationResult location = await locationService.GetCurrentPosition();
 
         if (!location.IsSuccess)
@@ -158,61 +149,26 @@ else
         await LoadNewReports();
     }
 
-    private async Task SetExampleLocation(ChangeEventArgs args)
-    {
-        userGridsquare = args.Value as string ?? throw new Exception("HTML select object did not have value");
-        await ManualLocation();
-    }
-
     /// <summary>
-    /// Pages through reports: previous closer report (unless already on closest)
+    /// Loads new reports using the current value of <see cref="userGridsquare"/>
     /// </summary>
-    private void PreviousReport()
+    /// <returns>The asynchronous task</returns>
+    private Task LoadNewReports()
     {
-        if (reportIndex > 0)
+        if (!Regex.IsMatch(userGridsquare ?? string.Empty, GRIDSQUARE_REGEX))
         {
-            currentReport = reports.Count > 0 ? reports[--reportIndex] : null;
-        }
-    }
-
-    /// <summary>
-    /// Pages through reports: next further report. Fetches new reports from the server if necessary.
-    /// </summary>
-    private async Task NextReport()
-    {
-        if (reportIndex + 1 >= reports.Count)
-        {
-            var newReports = await GetReports(reports.Count);
-            if (newReports.Count == 0)
-            {
-                userMessage = "No more reports on the server.";
-            }
-
-            reports = reports.Concat(newReports.ExceptBy(reports.Select(r => r.Packet.Sender), r => r.Packet.Sender)).ToList();
+            return Task.CompletedTask;
         }
 
-        // Guarded by a condition as the above concat(.exceptby) might not result in more `reports` if the new
-        // reports were previously seen. This could happen if new reports are added closer than the current pagination point.
-        // Might be good to fix in the future. Unlikely, but could be resolved by a page refresh.
-        if (reports.Count > reportIndex + 1)
-        {
-            currentReport = reports[++reportIndex];
-        }
+        userMessage = string.Empty;
+
+        // Null checked above in the regex match.
+        return reportList.SetLocation(userGridsquare!);
     }
 
-    /// <summary>
-    /// Fetches reports from the server, skipping the provided number of reports.
-    /// </summary>
-    /// <param name="skip">Number of reports to skip for pagination</param>
-    /// <returns>A list of <see cref="WeatherReport"/> from the server response</returns>
-    private async Task<IList<WeatherReport>> GetReports(int skip = 0)
+    /// <inheritdoc/>
+    protected override Task OnInitializedAsync()
     {
-        var reports = await client.GetFromJsonAsync<IEnumerable<WeatherReport>>($"{apiAddress}/WeatherReports/Near?location={userGridsquare}&limit=3&skip={skip}");
-        return reports?.ToList() ?? new List<WeatherReport>();
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadNewReports();
+        return LoadNewReports();
     }
 }
