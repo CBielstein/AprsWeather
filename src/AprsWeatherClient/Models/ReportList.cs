@@ -55,6 +55,7 @@ public class ReportList
     public async Task SetLocation(string gridsquare)
     {
         this.gridsquare = gridsquare ?? throw new ArgumentNullException(nameof(gridsquare));
+        reportIndex = 0;
         reports = await GetReports(0);
         CurrentReport = reports.FirstOrDefault();
     }
