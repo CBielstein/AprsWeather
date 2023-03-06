@@ -29,6 +29,17 @@ public partial class Index : ComponentBase
     private const string GRIDSQUARE_REGEX = @"^[a-zA-Z]{2}[0-9]{2}(([a-zA-Z]{2})|([a-zA-Z]{2}[0-9]{2}))?$";
 
     /// <summary>
+    /// A <see cref="System.Threading.Timer"/> to update the "minutes ago" UI.
+    /// </summary>
+    private readonly Timer agoUpdateTimer;
+
+    /// <summary>
+    /// The frequency to update the "minutes ago" UI.
+    /// Go with every 30 seconds as the redraw should be pretty lightweight and means we'll be closer to up-to-date than a full minute.
+    /// </summary>
+    private const int agoUpdateInterval = 30000;
+
+    /// <summary>
     /// Location service to query user device location
     /// </summary>
     [Inject]
@@ -39,6 +50,14 @@ public partial class Index : ComponentBase
     /// </summary>
     [Inject]
     public ReportList ReportList { get; set; } = default!;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Index"/> class.
+    /// </summary>
+    public Index()
+    {
+        agoUpdateTimer = new Timer(_ => this.StateHasChanged(), null, agoUpdateInterval, agoUpdateInterval);
+    }
 
     /// <summary>
     /// Sets the location using a value from the examples dropdown.
