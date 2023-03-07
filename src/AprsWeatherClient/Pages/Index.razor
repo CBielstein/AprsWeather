@@ -72,6 +72,10 @@ else
                             <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b>
                         </a>
                         by <b>@ReportList.CurrentReport.Packet.Sender</b>.
+                        @if(!string.IsNullOrWhiteSpace(wi.Comment))
+                        {
+                            <span><br/>Station comment: @wi.Comment</span>
+                        }
                     </i>
                 </div>
             }
