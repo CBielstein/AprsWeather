@@ -16,6 +16,8 @@ Once that is complete, load `http://localhost:80` in your browser or use `http:/
 
 Once finished, it can be shut down with `docker compose down`.
 
+**Note**: If running the client docker container directly, please add `--build-arg ENVIRONMENT=Development` to avoid including page view analytics code.
+
 ### Local/Debug
 
 To run without docker containers, which is helpful for debugging or quickly iterating on UI changes, run the following steps:
@@ -39,3 +41,9 @@ Good resources for finding and viewing APRS reports and gridsquare locations (go
 * [Google Maps APRS (APRS.fi)](https://aprs.fi)
 * [Amateur Radio Ham Radio Maidenhead Grid Square Locator Map](https://www.levinecentral.com/ham/grid_square.php)
 * [GridMapper by QRZ Ham Radio](https://www.qrz.com/gridmapper)
+
+## Analytics Reporting
+
+Visitor analytics reporting is handled by [Plausible.io](https://plausible.io).
+A script is added during deployment to report analytics data to them.
+When forking this repository, please remove or update [src/AprsWeatherClient/deploy/analytics.sh](src/AprsWeatherClient/deploy/analytics.sh).
