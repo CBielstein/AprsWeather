@@ -15,6 +15,7 @@ COPY AprsWeatherShared/ AprsWeatherShared/
 COPY . .
 RUN sed -i "s/%ENVIRONMENT%/$ENVIRONMENT/g" AprsWeatherClient/wwwroot/index.html
 RUN dos2unix AprsWeatherClient/deploy/analytics.sh
+RUN chmod a+rwx AprsWeatherClient/deploy/analytics.sh
 RUN AprsWeatherClient/deploy/analytics.sh $ENVIRONMENT
 RUN dotnet build AprsWeatherClient/AprsWeatherClient.csproj --configuration Release --no-restore
 
