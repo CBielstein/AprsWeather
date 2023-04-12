@@ -40,17 +40,6 @@ jobs:
       - name: Build server docker image
         run: docker build src --file src/AprsWeatherServer/Dockerfile
 
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DO_ACCESS_TOKEN }}
-
-      - name: Set environment variables in app spec
-        run: sed -i "s/%APRS_IS_CALLSIGN%/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
-
-      - name: Validate app spec
-        run: doctl apps spec validate .do/app.yaml
-
   deploy:
     name: deploy
     timeout-minutes: 15

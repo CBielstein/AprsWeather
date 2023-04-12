@@ -1,0 +1,37 @@
+name: validate spec
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.do/app.yaml'
+      - '.github/workflows/validate_spec.yml'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.do/app.yaml'
+      - '.github/workflows/validate_spec.yml'
+
+jobs:
+  validate_spec:
+    name: validate spec
+    timeout-minutes: 2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v3
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_ACCESS_TOKEN }}
+
+      - name: Set environment variables in app spec
+        run: sed -i "s/%APRS_IS_CALLSIGN%/${{ secrets.APRS_IS_CALLSIGN }}/g" .do/app.yaml
+
+      - name: Validate app spec
+        run: doctl apps spec validate .do/app.yaml
