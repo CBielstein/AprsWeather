@@ -1,8 +1,45 @@
 # AprsWeather
 
-Weather maps backed by data from the Automatic Position Reporting System (APRS).
+Weather maps backed by data from the Automatic Packet Reporting System (APRS).
 
 Deployed at: [hamwx.bielstein.dev](https://hamwx.bielstein.dev)
+
+## Diagrams
+
+As the [Automatic Packet Reporting System](http://aprs.org/) and its component
+[Automatic Packet Reporting System - Internet Service](https://aprs-is.net/) may not be familiar to
+all who wish to work on this project, I've included a few diagrams on the architecture of this app,
+how it relates to existing APRS infrastructure, and how data will typically flow through the full
+system.
+
+### Architecture
+
+This diagram lays out the following pieces:
+
+1. AprsWeather frontend (WebAssembly in the browser for visualization)
+2. AprsWeather backend (web server receiving and storing APRS packets from the APRS-IS and serving to frontend via a RESTful API)
+3. APRS-IS servers streaming data via TCP
+4. APRS iGate radio stations receiving and decoding packets from radio transmissions
+
+```mermaid
+```
+
+### Data Flow Example
+
+This diagram lays out a a flow for a weather report to move through the APRS, APRS-IS, and AprsWeather
+systems from the weather station to the end user.
+Steps are:
+
+1. A weather station takes measurements
+2. A radio transmitter encodes those measurements in an APRS data packet and transmits the packet over the air
+3. An APRS iGate station receives the packet via antenna and receiver then decodes and forwards to the APRS-IS servers
+4. APRS-IS server infrastructure forward messages through network
+5. APRS-IS servers forward message to subscribed servers (based on [filters](https://aprs-is.net/javAPRSFilter.aspx)) via TCP connection
+6. AprsWeather backend receives packet via TCP, decodes, and stores
+7. AprsWeather frontend requests reports via REST API from backend and displays to user
+
+```mermaid
+```
 
 ## Running Locally
 
