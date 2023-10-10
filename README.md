@@ -37,7 +37,7 @@ C4Context
     Rel(webUser, aprsWeatherFrontend, "uses")
 
     System_Boundary(aprsIs, "APRS-IS", "Internet Service for APRS") {
-        System(aprsServer, "APRS-IS Server", "One of many APRS-IS servers")
+        System(aprsServer, "APRS-IS Server Network", "Network of many APRS-IS servers")
         System(iGate, "iGate", "Internet Gateway Service")
 
         Rel(iGate, aprsServer, "forwards packet")
@@ -67,6 +67,31 @@ Steps are:
 7. AprsWeather frontend requests reports via REST API from backend and displays to user
 
 ```mermaid
+flowchart TD
+
+    station["Weather Station"]
+    digi["APRS Digital Repeater (digipeater)"]
+    radio["Radio Transmitter"]
+    igate["APRS Internet Gateway (iGate)"]
+    aprsIs((("APRS Servers")))
+    backend["AprsWeather Backend: AprsIsClient"]
+    db[("AprsWeather Backend: In-Memory Storage")]
+    api{{"AprsWeather Backend: API Query"}}
+    frontend[/"AprsWeather Frontend"/]
+    user["user"]
+
+    station-- report measurements (physical connection) ---radio
+    radio-. "transmit packet (radio freq.)" .->digi
+    radio-. "transmit packet (radio freq.)" .->igate
+    digi-. "repeat packet (radio freq.)" .->igate
+
+    igate-- forward packet (TCP)  -->aprsIs
+    aprsIs-- forward packet to subscribers (TCP) -->backend
+
+    backend-- save packet ---db
+    db-- retrieve packet ---api
+    api-. fetch data (REST) .->frontend
+    frontend-. "view reports!" .-user
 ```
 
 ## Running Locally
