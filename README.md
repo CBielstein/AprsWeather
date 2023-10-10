@@ -67,7 +67,7 @@ Steps are:
 7. AprsWeather frontend requests reports via REST API from backend and displays to user
 
 ```mermaid
-graph TD
+flowchart TD
 
     station["Weather Station"]
     digi["APRS Digital Repeater (digipeater)"]
