@@ -67,30 +67,31 @@ Steps are:
 7. AprsWeather frontend requests reports via REST API from backend and displays to user
 
 ```mermaid
-graph TD;
-    station["Weather Station"];
-    digi["APRS Digital Repeater (digipeater)"];
-    radio["Radio Transmitter"];
-    igate["APRS Internet Gateway (iGate)"];
-    aprsIs((("APRS Servers")));
-    backend["AprsWeather Backend: AprsIsClient"];
-    db[("AprsWeather Backend: In-Memory Storage")];
-    api{{"AprsWeather Backend: API Query"}};
-    frontend[/"AprsWeather Frontend"/];
-    user["user"];
+graph TD
 
-    station-- report measurements (physical connection) ---radio;
-    radio-. "transmit packet (radio freq.)" .->digi;
-    radio-. "transmit packet (radio freq.)" .->igate;
-    digi-. "repeat packet (radio freq.)" .->igate;
+    station["Weather Station"]
+    digi["APRS Digital Repeater (digipeater)"]
+    radio["Radio Transmitter"]
+    igate["APRS Internet Gateway (iGate)"]
+    aprsIs((("APRS Servers")))
+    backend["AprsWeather Backend: AprsIsClient"]
+    db[("AprsWeather Backend: In-Memory Storage")]
+    api{{"AprsWeather Backend: API Query"}}
+    frontend[/"AprsWeather Frontend"/]
+    user["user"]
 
-    igate-- forward packet (TCP)  -->aprsIs;
-    aprsIs-- forward packet to subscribers (TCP) -->backend;
+    station-- report measurements (physical connection) ---radio
+    radio-. "transmit packet (radio freq.)" .->digi
+    radio-. "transmit packet (radio freq.)" .->igate
+    digi-. "repeat packet (radio freq.)" .->igate
 
-    backend-- save packet ---db;
-    db-- retrieve packet ---api;
-    api-. fetch data (REST) .->frontend;
-    frontend-. "view reports!" .-user;
+    igate-- forward packet (TCP)  -->aprsIs
+    aprsIs-- forward packet to subscribers (TCP) -->backend
+
+    backend-- save packet ---db
+    db-- retrieve packet ---api
+    api-. fetch data (REST) .->frontend
+    frontend-. "view reports!" .-user
 ```
 
 ## Running Locally
