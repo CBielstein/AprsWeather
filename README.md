@@ -12,6 +12,8 @@ all who wish to work on this project, I've included a few diagrams on the archit
 how it relates to existing APRS infrastructure, and how data will typically flow through the full
 system.
 
+The following diagrams are written in [Mermaid](https://mermaid.js.org) and may require an [editor extension](https://mermaid.js.org/ecosystem/integrations-community.html#editor-plugins) to render properly in your dev environment.
+
 ### Architecture
 
 This diagram lays out the following pieces:
