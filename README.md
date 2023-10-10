@@ -22,6 +22,34 @@ This diagram lays out the following pieces:
 4. APRS iGate radio stations receiving and decoding packets from radio transmissions
 
 ```mermaid
+C4Context
+    title System architecture diagram for AprsWeather and APRS
+
+    Person(webUser, "AprsWeather User", "Someone Checking the AprsWeather web app for nearby weather reports")
+
+    System_Boundary(aprsWeather, "AprsWeather") {
+        System(aprsWeatherFrontend, "AprsWeather frontend", "WebAssembly UI")
+        System(aprsWeatherBackend, "AprsWeather backend", ".NET Server Process")
+
+        Rel(aprsWeatherFrontend, aprsWeatherBackend, "calls")
+    }
+
+    Rel(webUser, aprsWeatherFrontend, "uses")
+
+    System_Boundary(aprsIs, "APRS-IS", "Internet Service for APRS") {
+        System(aprsServer, "APRS-IS Server", "One of many APRS-IS servers")
+        System(iGate, "iGate", "Internet Gateway Service")
+
+        Rel(iGate, aprsServer, "forwards packet")
+    }
+
+    Rel(aprsServer, aprsWeatherBackend, "forwards packet")
+
+    System_Boundary(aprsRf, "APRS Radio Network", "The network of radio transceivers communicating via radio frequency transmissions") {
+        System(transmitter, "Radio Transmitter", "Origin of a report")
+    }
+
+    Rel(transmitter, iGate, "RF transmission")
 ```
 
 ### Data Flow Example
