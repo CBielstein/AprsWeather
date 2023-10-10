@@ -69,15 +69,27 @@ Steps are:
 ```mermaid
 flowchart TD
 
-    station["Weather Station"]
-    digi["APRS Digital Repeater (digipeater)"]
-    radio["Radio Transmitter"]
-    igate["APRS Internet Gateway (iGate)"]
-    aprsIs((("APRS Servers")))
-    backend["AprsWeather Backend: AprsIsClient"]
-    db[("AprsWeather Backend: In-Memory Storage")]
-    api{{"AprsWeather Backend: API Query"}}
-    frontend[/"AprsWeather Frontend"/]
+    subgraph weatherStation [Weather Station]
+        station["Weather Station"]
+        radio["Radio Transmitter"]
+    end
+
+    subgraph aprsPhysical [APRS Physical Network]
+        digi["APRS Digital Repeater (digipeater)"]
+        igate["APRS Internet Gateway (iGate)"]
+    end
+
+    subgraph aprsIsSystem [APRS Internet System]
+        aprsIs((("APRS Servers")))
+    end
+
+    subgraph aprsWeather [AprsWeather]
+        backend["AprsWeather Backend: AprsIsClient"]
+        db[("AprsWeather Backend: In-Memory Storage")]
+        api{{"AprsWeather Backend: API Query"}}
+        frontend[/"AprsWeather Frontend"/]
+    end
+
     user["user"]
 
     station-- report measurements (physical connection) ---radio
