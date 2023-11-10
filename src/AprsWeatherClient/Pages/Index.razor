@@ -9,80 +9,101 @@
 <h1>Current Weather</h1>
 
 <div>
-    <form onsubmit="return false;">
-        <input
-            id="userGridsquareBox"
-            placeholder="Gridsquare"
-            @bind="userGridsquare"
-            pattern=@GRIDSQUARE_REGEX
-            title="Maidenhead Gridsquare of length 4, 6, or 8. e.g. `CN87to`"
-        />
-        <input type="button" @onclick="AutoLocation" value="Find My Location"/>
-        <input type="submit" @onclick="ManualLocation" value="Get Weather!"/>
-    </form>
-    <select id="places" @onchange="SetExampleLocation">
-        <option value="none" selected hidden>Example Locations</option>
-        <option value="CN87">Seattle, USA</option>
-        <option value="PM95">Tokyo, Japan</option>
-        <option value="JF96">Cape Town, South Africa</option>
-        <option value="GG87">Rio de Janiero, Brazil</option>
-        <option value="JN18">Paris, France</option>
-    </select>
+    <span>
+        <input type="button" @onclick="UseAutoLocation" value="Use My Location"/>
+        <input type="button" @onclick="UseManualLocation" value="Input Custom Location"/>
+        <input type="button" @onclick="UseExampleLocation" value="Input Custom Location"/>
+
+    </span>
+    @switch (locationType)
+    {
+        case LocationType.Manual:
+            <div>
+                <form onsubmit="return false;">
+                    <input
+                        id="userGridsquareBox"
+                        placeholder="Gridsquare"
+                        @bind="userGridsquare"
+                        pattern=@GRIDSQUARE_REGEX
+                        title="Maidenhead Gridsquare of length 4, 6, or 8. e.g. `CN87to`"
+                    />
+                    <input type="submit" @onclick="SubmitManualLocation" value="Get Weather!"/>
+                </form>
+            </div>
+            break;
+
+        case LocationType.Example:
+            <div>
+                <select id="places" @onchange="SetExampleLocation">
+                    <option value="none" selected hidden>Example Locations</option>
+                    <option value="CN87">Seattle, USA</option>
+                    <option value="PM95">Tokyo, Japan</option>
+                    <option value="JF96">Cape Town, South Africa</option>
+                    <option value="GG87">Rio de Janiero, Brazil</option>
+                    <option value="JN18">Paris, France</option>
+                </select>
+            </div>
+            break;
+
+        case LocationType.Device:
+        default:
+            break;
+    }
+
     <a>@userMessage</a>
 </div>
 
-@if (userGridsquare == null)
+@if (userGridsquare != null)
 {
-    <p><em>Input location...</em></p>
-}
-else if (ReportList.CurrentReport == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Measurement</th>
-                <th>Reading</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (ReportList.CurrentReport.Packet.InfoField is WeatherInfo wi)
-            {
-                @foreach ((string label, WeatherInfoHelpers.MeasurementDisplayMap displayMap) in WeatherInfoHelpers.PropertyLabels)
+    if (ReportList.CurrentReport == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Measurement</th>
+                    <th>Reading</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ReportList.CurrentReport.Packet.InfoField is WeatherInfo wi)
                 {
-                    string? measurement = displayMap(wi);
-                    if (measurement != null)
+                    @foreach ((string label, WeatherInfoHelpers.MeasurementDisplayMap displayMap) in WeatherInfoHelpers.PropertyLabels)
                     {
-                        <tr>
-                            <td>@label</td>
-                            <td>@measurement</td>
-                        </tr>
-                    }
-                }
-
-                <div>
-                    <i>
-                        Reported <b>@ReportList.CurrentReport.ReceivedTime.MinutesSince() minutes ago</b> from about
-                        <a
-                            href=@($"https://www.openstreetmap.org/?mlat={wi.Position.Coordinates.Latitude}&mlon={wi.Position.Coordinates.Longitude}")
-                            target="_blank">
-                            <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b>
-                        </a>
-                        by <b>@ReportList.CurrentReport.Packet.Sender</b>.
-                        @if(!string.IsNullOrWhiteSpace(wi.Comment))
+                        string? measurement = displayMap(wi);
+                        if (measurement != null)
                         {
-                            <span><br/>Station comment: @wi.Comment</span>
+                            <tr>
+                                <td>@label</td>
+                                <td>@measurement</td>
+                            </tr>
                         }
-                    </i>
-                </div>
-            }
-        </tbody>
-    </table>
-    <span>
-        <button type="button" @onclick="ReportList.Previous" disabled=@(!ReportList.HasPrevious)>Closer Station</button>
-        <button type="button" @onclick="ReportList.Next">Further Station</button>
-    </span>
+                    }
+
+                    <div>
+                        <i>
+                            Reported <b>@ReportList.CurrentReport.ReceivedTime.MinutesSince() minutes ago</b> from about
+                            <a
+                                href=@($"https://www.openstreetmap.org/?mlat={wi.Position.Coordinates.Latitude}&mlon={wi.Position.Coordinates.Longitude}")
+                                target="_blank">
+                                <b>@($"{userPosition.MilesTo(wi.Position)} miles {userPosition.DirectionTo(wi.Position)}") away</b>
+                            </a>
+                            by <b>@ReportList.CurrentReport.Packet.Sender</b>.
+                            @if(!string.IsNullOrWhiteSpace(wi.Comment))
+                            {
+                                <span><br/>Station comment: @wi.Comment</span>
+                            }
+                        </i>
+                    </div>
+                }
+            </tbody>
+        </table>
+        <span>
+            <button type="button" @onclick="ReportList.Previous" disabled=@(!ReportList.HasPrevious)>Closer Station</button>
+            <button type="button" @onclick="ReportList.Next">Further Station</button>
+        </span>
+    }
 }
