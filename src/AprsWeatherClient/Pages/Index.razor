@@ -18,7 +18,7 @@
     @switch (locationType)
     {
         case LocationType.Manual:
-            <div>
+            <div class="locationInput">
                 <form onsubmit="return false;">
                     <input
                         id="userGridsquareBox"
@@ -33,7 +33,7 @@
             break;
 
         case LocationType.Example:
-            <div>
+            <div class="locationInput">
                 <select id="places" @onchange="SetExampleLocation">
                     <option value="none" selected hidden>Example Locations</option>
                     <option value="CN87">Seattle, USA</option>
