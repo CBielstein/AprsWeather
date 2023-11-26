@@ -13,8 +13,8 @@
         <input type="button" @onclick="UseAutoLocation" value="Use My Location"/>
         <input type="button" @onclick="UseManualLocation" value="Input Gridsquare"/>
         <input type="button" @onclick="UseExampleLocation" value="Example Locations"/>
-
     </span>
+
     @switch (locationType)
     {
         case LocationType.Manual:
@@ -29,6 +29,7 @@
                     />
                     <input type="submit" @onclick="SubmitManualLocation" value="Get Weather!"/>
                 </form>
+                <div>@userMessage</div>
             </div>
             break;
 
@@ -42,15 +43,21 @@
                     <option value="GG87">Rio de Janiero, Brazil</option>
                     <option value="JN18">Paris, France</option>
                 </select>
+                <div>@userMessage</div>
             </div>
             break;
 
         case LocationType.Device:
         default:
+            @if (!string.IsNullOrWhiteSpace(userMessage))
+            {
+                <div class="locationInput">
+                    <div>@userMessage</div>
+                </div>
+            }
             break;
     }
 
-    <a>@userMessage</a>
 </div>
 
 @if (userGridsquare != null)

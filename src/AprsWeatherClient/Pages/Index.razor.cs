@@ -21,7 +21,7 @@ public partial class Index : ComponentBase
     /// <summary>
     /// Output to user in case of errors
     /// </summary>
-    private string userMessage = string.Empty;
+    private string? userMessage;
 
     /// <summary>
     /// The type of location to use, helps determine which
@@ -73,6 +73,7 @@ public partial class Index : ComponentBase
     private Task SetExampleLocation(ChangeEventArgs args)
     {
         userGridsquare = args.Value as string ?? throw new Exception("HTML select object did not have value");
+        userMessage = $"Using gridsquare: {userGridsquare}";
         return SubmitManualLocation();
     }
 
@@ -103,6 +104,7 @@ public partial class Index : ComponentBase
     private async Task UseAutoLocation()
     {
         userGridsquare = null;
+        userMessage = null;
         locationType = LocationType.Device;
 
         GeolocationResult location = await LocationService.GetCurrentPosition();
@@ -117,6 +119,8 @@ public partial class Index : ComponentBase
         userPosition.Coordinates = new GeoCoordinatePortable.GeoCoordinate(location.Position.Coords.Latitude, location.Position.Coords.Longitude);
         userGridsquare = userPosition.EncodeGridsquare(6, false);
 
+        userMessage = $"Detected gridsquare: {userGridsquare}";
+
         await LoadNewReports();
     }
 
@@ -125,6 +129,7 @@ public partial class Index : ComponentBase
     /// </summary>
     private void UseManualLocation()
     {
+        userMessage = null;
         userGridsquare = null;
         locationType = LocationType.Manual;
     }
@@ -134,6 +139,7 @@ public partial class Index : ComponentBase
     /// </summary>
     private void UseExampleLocation()
     {
+        userMessage = null;
         userGridsquare = null;
         locationType = LocationType.Example;
     }
@@ -148,8 +154,6 @@ public partial class Index : ComponentBase
         {
             return;
         }
-
-        userMessage = string.Empty;
 
         // Null checked above in the regex match.
         await ReportList.SetLocation(userGridsquare!);
