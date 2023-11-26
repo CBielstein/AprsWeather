@@ -104,7 +104,7 @@ public partial class Index : ComponentBase
     private async Task UseAutoLocation()
     {
         userGridsquare = null;
-        userMessage = null;
+        userMessage = "Detecting location...";
         locationType = LocationType.Device;
 
         GeolocationResult location = await LocationService.GetCurrentPosition();
