@@ -29,7 +29,7 @@
                     />
                     <input type="submit" @onclick="SubmitManualLocation" value="Get Weather!"/>
                 </form>
-                <div>@userMessage</div>
+                <div class="userMessage">@userMessage</div>
             </div>
             break;
 
@@ -43,7 +43,7 @@
                     <option value="GG87">Rio de Janiero, Brazil</option>
                     <option value="JN18">Paris, France</option>
                 </select>
-                <div>@userMessage</div>
+                <div class="userMessage">@userMessage</div>
             </div>
             break;
 
@@ -52,7 +52,7 @@
             @if (!string.IsNullOrWhiteSpace(userMessage))
             {
                 <div class="locationInput">
-                    <div>@userMessage</div>
+                    <div class="userMessage">@userMessage</div>
                 </div>
             }
             break;
