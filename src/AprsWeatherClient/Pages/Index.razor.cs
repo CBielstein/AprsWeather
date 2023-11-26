@@ -21,7 +21,13 @@ public partial class Index : ComponentBase
     /// <summary>
     /// Output to user in case of errors
     /// </summary>
-    private string userMessage = string.Empty;
+    private string? userMessage;
+
+    /// <summary>
+    /// The type of location to use, helps determine which
+    /// options to show the user
+    /// </summary>
+    private LocationType locationType = LocationType.Device;
 
     /// <summary>
     /// Case-insensitive gridsquare of length 4, 6, or 8
@@ -67,14 +73,15 @@ public partial class Index : ComponentBase
     private Task SetExampleLocation(ChangeEventArgs args)
     {
         userGridsquare = args.Value as string ?? throw new Exception("HTML select object did not have value");
-        return ManualLocation();
+        userMessage = $"Using gridsquare: {userGridsquare}";
+        return SubmitManualLocation();
     }
 
     /// <summary>
     /// Sets the location using a manual entry value.
     /// </summary>
     /// <returns>The asynchronous task</returns>
-    private Task ManualLocation()
+    private Task SubmitManualLocation()
     {
         if (!Regex.IsMatch(userGridsquare ?? string.Empty, GRIDSQUARE_REGEX))
         {
@@ -90,11 +97,16 @@ public partial class Index : ComponentBase
     }
 
     /// <summary>
-    /// Sets the location using the geolocation API.
+    /// Switch to use a <see cref="LocationType.Device"/> input type.
+    /// Sets the using the geolocation API.
     /// </summary>
     /// <returns>The asynchronous task</returns>
-    private async Task AutoLocation()
+    private async Task UseAutoLocation()
     {
+        userGridsquare = null;
+        userMessage = "Detecting location...";
+        locationType = LocationType.Device;
+
         GeolocationResult location = await LocationService.GetCurrentPosition();
 
         if (!location.IsSuccess)
@@ -107,7 +119,29 @@ public partial class Index : ComponentBase
         userPosition.Coordinates = new GeoCoordinatePortable.GeoCoordinate(location.Position.Coords.Latitude, location.Position.Coords.Longitude);
         userGridsquare = userPosition.EncodeGridsquare(6, false);
 
+        userMessage = $"Detected gridsquare: {userGridsquare}";
+
         await LoadNewReports();
+    }
+
+    /// <summary>
+    /// Switch to use a <see cref="LocationType.Manual"/> input type.
+    /// </summary>
+    private void UseManualLocation()
+    {
+        userMessage = null;
+        userGridsquare = null;
+        locationType = LocationType.Manual;
+    }
+
+    /// <summary>
+    /// Switch to use a <see cref="LocationType.Example"/> input type.
+    /// </summary>
+    private void UseExampleLocation()
+    {
+        userMessage = null;
+        userGridsquare = null;
+        locationType = LocationType.Example;
     }
 
     /// <summary>
@@ -121,8 +155,6 @@ public partial class Index : ComponentBase
             return;
         }
 
-        userMessage = string.Empty;
-
         // Null checked above in the regex match.
         await ReportList.SetLocation(userGridsquare!);
     }
@@ -131,5 +163,27 @@ public partial class Index : ComponentBase
     protected override Task OnInitializedAsync()
     {
         return LoadNewReports();
+    }
+
+    /// <summary>
+    /// An enum to keep track of the type of location input
+    /// the user would like to use
+    /// </summary>
+    private enum LocationType
+    {
+        /// <summary>
+        /// Use device location
+        /// </summary>
+        Device,
+
+        /// <summary>
+        /// Manual entry of location
+        /// </summary>
+        Manual,
+
+        /// <summary>
+        /// Use a pre-defined example location
+        /// </summary>
+        Example,
     }
 }

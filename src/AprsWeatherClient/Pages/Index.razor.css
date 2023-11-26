@@ -1,0 +1,10 @@
+.locationInput {
+    padding: 1em;
+    margin: 1em;
+    background: linear-gradient(90deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    border-radius: 0.4em;
+}
+
+.userMessage {
+    color: white;
+}
